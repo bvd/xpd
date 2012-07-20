@@ -1,0 +1,8 @@
+# images
+/css/images/
+/images/
+# enormous js libraries
+/js/ext/ckfinder/
+/js/ext/ckeditor/
+# configuration details
+/conf/
