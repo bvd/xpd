@@ -126,23 +126,25 @@ body {margin-top:0;}
         </script>-->
 		<script id="reviewExpanded" type="text/x-jquery-tmpl">
             <div class='reviewExp'>
-		<div>
-			<span class="reviewHead">
-				<span class="pane-icon">
-					<img src="app/images/site/review_inverted.png"/>
-				</span>
-				{{=head}}
-			</span>
-			<span class="reviewOwnerName"></br>by {{=ownerName}}</span>
-		</div>
-		<div>
-		    <span class="add-comment-button" onclick="vdvw.c.onAddCommentClick({{=id}})">add comment</span>
-                    <span class="vdvw-delete-button" onclick="vdvw.c.onDeleteClick('{{=type}}',{{=id}},'{{=head}}')">delete</span>
-                    <span id="reviewId" style="display:none" >{{=id}}</span>
-		</div>
-		<div>
-			<div class="reviewBody">{{=content!}}</div>
-		</div>
+				<div>
+					<span class="reviewHead">
+						<span class="pane-icon">
+							<img src="app/images/site/review_inverted.png"/>
+						</span>
+						{{=head}}
+					</span>
+					<span class="reviewOwnerName"></br>by {{=ownerName}}</span>
+				</div>
+				<div>
+					<span class="add-comment-button" onclick="vdvw.c.onAddCommentClick({{=id}})">add comment</span>
+							<span class="vdvw-delete-button" onclick="vdvw.c.onDeleteClick('{{=type}}',{{=id}},'{{=head}}')">delete</span>
+							<span id="reviewId" style="display:none" >{{=id}}</span>
+				</div>
+				<div>
+					<div class="reviewBody">{{=content!}}</div>
+				</div>
+				<div class="commentsContainer">
+				</div>
             </div>
         </script>
 
