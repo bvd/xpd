@@ -2121,6 +2121,109 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
     //draw review marker
     var refData;
     var review = xpd.Mappers.getMappedReviewForReview(xpd.Mappers.getReviewForId(reviewId));
+	// TODO - why has a review part of its data duplicate?
+	/**
+	 * e.g.
+	 *
+	{
+	   "ownerId":"5",
+	   "ownerName":"kangaroo",
+	   "hTime":"19-2-2012 2:23",
+	   "head":"wang pang",
+	   "content":"chen chun ni haw",
+	   "type":"review",
+	   "id":"1",
+	   "timestamp":"1329614621",
+	   "Ma":"22.396428",
+	   "Na":"114.10949700000003",
+	   "review":{
+		  "time":"1329614621",
+		  "head":"wang pang",
+		  "content":"chen chun ni haw",
+		  "ownerId":"5",
+		  "type":"review",
+		  "id":"1",
+		  "ownerName":"kangaroo"
+	   },
+	   "reviewedBook":{
+		  "ownerId":"5",
+		  "ownerName":"kangaroo",
+		  "hTime":"21-7-2012 8:41",
+		  "hId":"4",
+		  "type":"book",
+		  "id":"3",
+		  "timestamp":1342852862,
+		  "Ma":"-35.2819998",
+		  "Na":"149.12868430000003"
+	   },
+	   "ownerLocation":{
+		  "Ma":"-35.2819998",
+		  "Na":"149.12868430000003",
+		  "type":"location",
+		  "id":"5",
+		  "ownerName":"kangaroo"
+	   },
+	   "reviewLocation":{
+		  "Ma":"22.396428",
+		  "Na":"114.10949700000003",
+		  "type":"location",
+		  "id":"6"
+	   },
+	   "mappedComments":[
+		  {
+			 "ownerId":"5",
+			 "ownerName":"kangaroo",
+			 "ownerMa":"-35.2819998",
+			 "ownerNa":"149.12868430000003",
+			 "hTime":"19-2-2012 3:1",
+			 "head":"lekkerrr",
+			 "content":"jaja",
+			 "commentedEntityName":"review",
+			 "commentedEntityId":"1",
+			 "commentedEntityHead":"wang pang",
+			 "type":"comment",
+			 "id":"1",
+			 "timestamp":"1329616909",
+			 "Ma":"52.3702157",
+			 "Na":"4.895167899999933"
+		  },
+		  {
+			 "ownerId":"4",
+			 "ownerName":"afrika",
+			 "ownerMa":"-1.2920659",
+			 "ownerNa":"36.82194619999996",
+			 "hTime":"19-2-2012 3:6",
+			 "head":"london",
+			 "content":"new york",
+			 "commentedEntityName":"review",
+			 "commentedEntityId":"1",
+			 "commentedEntityHead":"wang pang",
+			 "type":"comment",
+			 "id":"3",
+			 "timestamp":"1329617193",
+			 "Ma":"48.856614",
+			 "Na":"2.3522219000000177"
+		  },
+		  {
+			 "ownerId":"8",
+			 "ownerName":"bert",
+			 "ownerMa":"52.1561113",
+			 "ownerNa":"52.1561113",
+			 "hTime":"28-5-2012 21:31",
+			 "head":"sweet",
+			 "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
+			 "commentedEntityName":"review",
+			 "commentedEntityId":"1",
+			 "commentedEntityHead":"wang pang",
+			 "type":"comment",
+			 "id":"6",
+			 "timestamp":"1338233492",
+			 "Ma":"32.3182314",
+			 "Na":"-86.90229799999997"
+		  }
+	   ]
+	}
+	*/
     refData = {id:review.id, type:xpd.Review.EntityName()};
     var reviewerMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review),$H(refData));
     xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(refData));
@@ -2303,11 +2406,134 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     // 3) the commented entity should be connected to another user
     // 4) other comments on the same review should also be visualised
     var mappedComment = xpd.Mappers.getMappedCommentForComment(xpd.db.table(xpd.Comment.EntityName()).select(commentId));
+	/**
+	 * e.g. mappedComment
+	 *
+	{
+	   "ownerId":"8",
+	   "ownerName":"bert",
+	   "ownerMa":"52.1561113",
+	   "ownerNa":"52.1561113",
+	   "hTime":"28-5-2012 21:31",
+	   "head":"sweet",
+	   "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
+	   "commentedEntityName":"review",
+	   "commentedEntityId":"1",
+	   "commentedEntityHead":"wang pang",
+	   "type":"comment",
+	   "id":"6",
+	   "timestamp":"1338233492",
+	   "Ma":"32.3182314",
+	   "Na":"-86.90229799999997"
+	}
+	 */
     var commented = (mappedComment.commentedEntityName == xpd.Review.EntityName()) ? xpd.Review.EntityName() : null;
-    commented = xpd.Mappers.getMappedReviewForReview(xpd.db.table(commented).select(mappedComment.commentedEntityId));
+	commented = xpd.Mappers.getMappedReviewForReview(xpd.db.table(commented).select(mappedComment.commentedEntityId));
     if(!(commented instanceof xpd.Mapped.MappedReview)){
         return;
     }
+    /**
+     * e.g. commented (type mappedreview)
+     * 
+    {
+       "review":{
+          "time":"1329614621",
+          "head":"wang pang",
+          "content":"chen chun ni haw",
+          "ownerId":"5",
+          "type":"review",
+          "id":"1",
+          "ownerName":"kangaroo"
+       },
+       "reviewedBook":{
+          "ownerId":"5",
+          "ownerName":"kangaroo",
+          "hTime":"21-7-2012 8:41",
+          "hId":"4",
+          "type":"book",
+          "id":"3",
+          "timestamp":1342852862,
+          "Ma":"-35.2819998",
+          "Na":"149.12868430000003"
+       },
+       "ownerLocation":{
+          "Ma":"-35.2819998",
+          "Na":"149.12868430000003",
+          "type":"location",
+          "id":"5",
+          "ownerName":"kangaroo"
+       },
+       "reviewLocation":{
+          "Ma":"22.396428",
+          "Na":"114.10949700000003",
+          "type":"location",
+          "id":"6"
+       },
+       "mappedComments":[
+          {
+             "ownerId":"5",
+             "ownerName":"kangaroo",
+             "ownerMa":"-35.2819998",
+             "ownerNa":"149.12868430000003",
+             "hTime":"19-2-2012 3:1",
+             "head":"lekkerrr",
+             "content":"jaja",
+             "commentedEntityName":"review",
+             "commentedEntityId":"1",
+             "commentedEntityHead":"wang pang",
+             "type":"comment",
+             "id":"1",
+             "timestamp":"1329616909",
+             "Ma":"52.3702157",
+             "Na":"4.895167899999933"
+          },
+          {
+             "ownerId":"4",
+             "ownerName":"afrika",
+             "ownerMa":"-1.2920659",
+             "ownerNa":"36.82194619999996",
+             "hTime":"19-2-2012 3:6",
+             "head":"london",
+             "content":"new york",
+             "commentedEntityName":"review",
+             "commentedEntityId":"1",
+             "commentedEntityHead":"wang pang",
+             "type":"comment",
+             "id":"3",
+             "timestamp":"1329617193",
+             "Ma":"48.856614",
+             "Na":"2.3522219000000177"
+          },
+          {
+             "ownerId":"8",
+             "ownerName":"bert",
+             "ownerMa":"52.1561113",
+             "ownerNa":"52.1561113",
+             "hTime":"28-5-2012 21:31",
+             "head":"sweet",
+             "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
+             "commentedEntityName":"review",
+             "commentedEntityId":"1",
+             "commentedEntityHead":"wang pang",
+             "type":"comment",
+             "id":"6",
+             "timestamp":"1338233492",
+             "Ma":"32.3182314",
+             "Na":"-86.90229799999997"
+          }
+       ],
+       "ownerId":"5",
+       "ownerName":"kangaroo",
+       "hTime":"19-2-2012 2:23",
+       "head":"wang pang",
+       "content":"chen chun ni haw",
+       "type":"review",
+       "id":"1",
+       "timestamp":"1329614621",
+       "Ma":"22.396428",
+       "Na":"114.10949700000003"
+    }
+    */
     // we have all our data....
     var colors = vdvw.v.Const.getColorsArray();
     var toOwnerOfCommentColor = '#333';//colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
