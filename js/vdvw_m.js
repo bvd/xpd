@@ -245,7 +245,7 @@ vdvw.m.DataBase = Class.create({
     }
 });
 vdvw.m.DataBase.createQuery = function(query){
-    alert('-> test' );
+   // alert('-> test' );
     // PARSE THE QUERY & TURN IT INTO A FUNCTION
     // FORMAT: 
     // where .. is .. , .. is .. [] orderby property (ascending|descending) limit int (one-based)
@@ -1471,7 +1471,7 @@ vdvw.c.Startup = Class.create({
     fakeLocations: null,
     fakeDbKey: 0,
     initialize: function(args){
-	alert('heel gevat uit de hoek');
+	//alert('heel gevat uit de hoek');
         jQuery('body').append(vdvw.v.FMapCanvas());
         vdvw.v.initMapCanvasStyles();
         vdvw.v.initGeocoder();
@@ -1489,7 +1489,7 @@ vdvw.c.Startup = Class.create({
         jQuery('body').append(vdvw.v.FLegendPic());
 		jQuery('body').append(vdvw.v.FLoginWrapper());
         jQuery('body').append(vdvw.v.FContentPaneWrapper());
-        alert('hi B');
+        //alert('hi B');
         jQuery('#breadcrumb').slideDown();
         jQuery('#contentpane-wrapper').jScrollPane({autoReinitialise: true, animateScroll: true, animateDuration: 6000});
         //ernst
