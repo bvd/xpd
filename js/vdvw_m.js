@@ -1488,7 +1488,7 @@ vdvw.c.Startup = Class.create({
         jQuery('body').append(vdvw.v.FLegendPic());
 		jQuery('body').append(vdvw.v.FLoginWrapper());
         jQuery('body').append(vdvw.v.FContentPaneWrapper());
-        
+        alert('hi B');
         jQuery('#breadcrumb').slideDown();
         jQuery('#contentpane-wrapper').jScrollPane({autoReinitialise: true, animateScroll: true, animateDuration: 6000});
         //ernst
