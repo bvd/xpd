@@ -245,6 +245,7 @@ vdvw.m.DataBase = Class.create({
     }
 });
 vdvw.m.DataBase.createQuery = function(query){
+    alert('-> test' );
     // PARSE THE QUERY & TURN IT INTO A FUNCTION
     // FORMAT: 
     // where .. is .. , .. is .. [] orderby property (ascending|descending) limit int (one-based)
