@@ -95,7 +95,7 @@ class Model_Review extends FCF_RedBean_SimpleModel {
         $this->bean->pending = true;
         $this->bean->time = time();
     }
-	public function delete() {
+    public function delete() {
         if(false === ($user = Model_Session::getLoggedInUser())) throw new Exception("comment delete fail 1");
         if(Model_Session::hasLoggedInUserForOneOfRoles(array(
                 Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_SYSADMIN),
@@ -123,9 +123,8 @@ class Model_Comment extends FCF_RedBean_SimpleModel {
             $this->bean->removeProperty("commentedEntityType");
             $this->bean->removeProperty("commentedEntityId");
         }
-    }
-         
-	public function after_update() {
+    }     
+    public function after_update() {
             if($this->relatedEntityType && $this->relatedEntityId){
                 $commented = R::load($this->relatedEntityType,$this->relatedEntityId);
                 R::associate($this->bean, $commented);
@@ -135,11 +134,10 @@ class Model_Comment extends FCF_RedBean_SimpleModel {
                 unset($this->owner);
             }
         }
-    
-	public function open() {
+    public function open() {
         //throw new FCF_Exception('not implemented');
     }
-	public function delete() {
+    public function delete() {
         if(false === ($user = Model_Session::getLoggedInUser())) throw new Exception("comment delete fail 1");
         if(Model_Session::hasLoggedInUserForOneOfRoles(array(
                 Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_SYSADMIN),
@@ -168,16 +166,16 @@ class Model_Book extends FCF_RedBean_SimpleModel {
             throw new Exception("book update fail 1");
         }
     }
-	public function after_update() {
+    public function after_update() {
         //throw new FCF_Exception('not implemented');
     }
     public function open() {
         
     }
-	public function delete() {
+    public function delete() {
         throw new FCF_Exception('not implemented');
     }
-	public function after_delete() {
+    public function after_delete() {
         throw new FCF_Exception('not implemented');
     }
     public function dispense() {

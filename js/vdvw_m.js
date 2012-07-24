@@ -688,8 +688,13 @@ xpd.Mappers.getBookAtCurrentLocationForId = function(id){
     return ret;
 }
 xpd.Mappers.getBooksAtCurrentLocations = function(){
-    var getBooksQ = vdvw.m.DataBase.createQuery('orderby id ascending');   
-    var allBooks = xpd.db.table(xpd.BookPrint.EntityName()).select(getBooksQ);
+    var booksTB = xpd.db.table(xpd.BookPrint.EntityName());
+    if(undefined == booksTB){
+        alert("no books in the database yet");
+        return;
+    }
+    var getBooksQ = vdvw.m.DataBase.createQuery('orderby id ascending');
+    var allBooks = booksTB.select(getBooksQ);
     var ret = [];
     // book number [n] is with [mr x] who is at [location Ma, Na]
     allBooks.each(function(bookPrint){
@@ -788,7 +793,7 @@ vdvw.v.Const.RAND_CONT = function(){return "Do you see any Teletubbies in here? 
 vdvw.v.Const.RAND_CONT_COMM = function(){return "Yeah, I like animals better than people sometimes... Especially dogs. Dogs are the best. Every time you come home, they act like they haven't seen you in a year. And the good thing about dogs... is they got different dogs for different people. Like pit bulls. The dog of dogs. Pit bull can be the right man's best friend... or the wrong man's worst enemy. You going to give me a dog for a pet, give me a pit bull. Give me... Raoul. Right, Omar? Give me Raoul.";}
 
 vdvw.v.Const.bookTitle = function(book_id, book_owner_name){
-    return 'Book number ' + (parseInt(book_id) + ((fakeItBart == "none") ? 0 : 1 )) + ' is residing with ' + book_owner_name + '.';
+    return 'Book number ' + (parseInt(book_id) + ((fakeItBart == "none") ? 0 : 1 )) + ' / ' + book_owner_name + '.';
 }
 vdvw.v.Const.reviewTitle = function(book_id, book_owner_name){
     return book_owner_name + ' added material to book number ' + (parseInt(book_id)+1) + '.';
@@ -1384,7 +1389,6 @@ vdvw.v.initMapCanvasStyles = function(){
     /* END THIRD MAP STYLE */
     
     var locUt = xpd.LOCATION_UTRECHT();
-
     var locUtrecht = new google.maps.LatLng(locUt.Ma, locUt.Na);
 
     // options startup
@@ -1799,16 +1803,9 @@ vdvw.c.onClick = function(event){
     if(event.hasOwnProperty('refData')){
         representedData = event.refData;
     }else{
-        var tryBubble = jQuery(this);
-        var iter = 0;
-        var body = jQuery('body');
-        while(iter <4){
-            if(tryBubble.data('refData') != undefined){
-                representedData = tryBubble.data('refData');
-                break;
-            }
-            tryBubble = tryBubble.parent();
-            iter++;
+        var thisObject = jQuery(this);
+        if(!(undefined == thisObject.data('refData'))){
+            representedData = thisObject.data('refData');
         }
     }
     if(xpd.viewState.toggleFAQ){
@@ -1862,18 +1859,10 @@ vdvw.c.onLogoutClick = function(event){
     drp.test.createLogoutDialog();
 }
 vdvw.c.dataRefresh = function(type,id){
-    drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(d){
-        if(drp.debugPost) alert(d);
-        var rsp = JSON.parse(d);
-        if(!(rsp.hasOwnProperty("getData"))) alert('no property getData on: ' + d);
-        if(rsp.getData.hasOwnProperty("error")) alert(d);
-        
+    drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
         xpd.flush.flushAll();
-        
         xpd.db = new vdvw.m.DataBase();
-        
         var rs = rsp.getData.result;
-        
         // we will iterate (a lot)
         var i = 0;
         var i2 = 0;
@@ -2001,12 +1990,8 @@ vdvw.c.removeFromContentPane = function(type,id){
 vdvw.c.whoIsLoggedIn = function(){
     var cmd = drp.tr.comm.checkUser();
     drp.postTR({id:"checkUser",comm:[cmd]}, function(d){
-        if(drp.debugPost) alert(d);
-        var rsp = JSON.parse(d);
-        if(!(rsp.hasOwnProperty("checkUser"))) alert('no property checkUser on: ' + d);
-        if(rsp.checkUser.hasOwnProperty("error")) alert(d);
-        if(rsp.checkUser.result.hasOwnProperty("id")){
-            if(rsp.checkUser.result.id > 0){
+        if(d.checkUser.result.hasOwnProperty("id")){
+            if(d.checkUser.result.id > 0){
                 jQuery("#login-link").hide();
                 jQuery("#logout-link").show();
                 return;
@@ -2069,13 +2054,14 @@ vdvw.c.VisualizeConnections = function(refData){
     xpd.SelectedBook = -1;
     xpd.SkipCurrentBookLocations = [];
     var hasOwnerId = false;
-    if(refData.type == xpd.BookPrint.EntityName() && !refData.hasOwnProperty('ownerId')){
+    if(refData.type == xpd.BookPrint.EntityName()/* && !refData.hasOwnProperty('ownerId')*/){
         vdvw.c.VisualizeTraceForBook(refData.id);
         hasOwnerId = true;
+        return; // tmp
     }
-    if(refData.type == xpd.BookPrint.EntityName() && refData.hasOwnProperty('ownerId')){
+    /*if(refData.type == xpd.BookPrint.EntityName() && refData.hasOwnProperty('ownerId')){
         vdvw.c.VisualizeTraceForBookAtBookStop(refData.id, refData.ownerId);
-    }
+    }*/
     if(refData.type == xpd.Comment.EntityName()){
         vdvw.c.VisualizeConnectionsForCommentId(refData.id);
     }
@@ -2235,7 +2221,7 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
 	//
 	//
 	var reviewerMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review),$H(reviewRefData));
-    review.mappedComments.each(function(comment){
+        review.mappedComments.each(function(comment){
     	var commentRefData = {id:comment.id, type:xpd.Comment.EntityName()};
     	var cmMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(comment),$H(commentRefData));
         var commentToReviewLine = xpd.viz.drawLine('#333', cmMarker.getPosition(), reviewerMarker.getPosition(), false, 1);
@@ -2253,82 +2239,27 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
         var owner = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(review.ownerLocation),$H(reviewOwnerRefData));
     else
         var owner = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(review.reviewedBook), $H(reviewOwnerRefData));
-    xpd.viz.drawLine('#c00', owner.getPosition(), reviewerMarker.getPosition(), false, 1);
+        xpd.viz.drawLine('#c00', owner.getPosition(), reviewerMarker.getPosition(), false, 1);
 	//
 	//
 	// display the review as a breadcrumb
 	//
 	//
-	xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(reviewRefData));
+	var bc = xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(reviewRefData));
+        var ownerSpan = bc.find(".reviewOwnerName");
+        ownerSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:review.reviewedBook.ownerId}));
+        ownerSpan.click(vdvw.c.onClick);
+        var headSpan = bc.find(".reviewHead");
+        headSpan.data('refData', $H({type:xpd.Review.EntityName(),id:review.id}));
+        headSpan.click(vdvw.c.onClick);
+        //
+        //
 	//
 	//
 	// show or open the review in the content pane
 	//
 	//
 	xpd.viz.drawContentPane(xpd.viz.contentpane.factorForReview(review),$H(reviewRefData));
-}
-vdvw.c.VisualizeTraceForBookAtBookStop = function(bookId, ownerId){
-    //console.log('VisualizeTraceForBookAtBookStop');
-    var bookstops = xpd.Mappers.getTraceForBook(bookId);
-    var markerFrom = null;
-    var markerTo = null;
-    var reviews = null;
-    var colors = vdvw.v.Const.getColorsArray();
-    var line = null;
-    for( var iter = 0; iter < bookstops.length; ++iter){
-        var bookstop = bookstops[iter];
-        // als ie hem nu heeft dan is ie een wit bolletje 
-        // (geven hem geen owner id want dat doen we met een user)
-        var refDataNoOwnerId = {type: bookstop.type, id: bookstop.id};
-        
-        // alsie hem nu niet meer heeft beelden we hem af als poppetje en krijgt ie een 
-        // owner id want dan weten we later waar we op geklikt hebben
-        var refData = {type: bookstop.type, id: bookstop.id, ownerId: bookstop.ownerId};
-        
-        //temp
-        if(iter == bookstops.length -1){
-                // if this is the current book location, tell a different story
-                markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H(refDataNoOwnerId));
-        } else {
-            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookstop), $H(refData));
-        }
-        // end temp
-        
-        //markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H(refData));
-        if(iter != 0){
-            if(bookstop.ownerId == ownerId){
-                // do support reviews
-                reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
-                xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForUserFocusOnBookstop(bookstop),$H(refData));
-                // draw the reviews (all reviews for one book stop have the same color)
-                //var rndColor = colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-                var rndColor = '#333';
-                for( var it2 = 0; it2<reviews.length; ++it2){
-                    var review = reviews[it2];
-                    var refDataRev = {type: review.type, id: review.id, ownerId: review.ownerId};
-                    var revMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review), $H(refDataRev));
-                    var line = xpd.viz.drawLine(rndColor, markerTo.getPosition(), revMarker.getPosition(), false, 1);
-                    xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(refDataRev));
-                }
-                // if our hero user also commented on others, we are now going to show that, too
-                var comments = xpd.Mappers.getCommentsForUser(ownerId);
-                var cmColor = '#677D91';
-                //colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-                comments.each(function(comment){
-                    var cmData = {ownerId:ownerId, id:comment.id, type:xpd.Comment.EntityName()};
-                    var cmMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(comment), $H(cmData));
-                    line = xpd.viz.drawLine(cmColor, markerTo.getPosition(), cmMarker.getPosition(), false, 1);
-                    xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCommentByUser(comment),$H(cmData));
-                })
-            }
-        }
-        
-        if(markerFrom != null){
-            line = xpd.viz.drawLine('DimGray', markerFrom.getPosition(), markerTo.getPosition(), true, 1);
-        }
-        markerFrom = markerTo;
-        
-    }
 }
 vdvw.c.VisualizeTraceForBook = function(bookId){
     //console.log('VisualizeTraceForBook');
@@ -2341,46 +2272,51 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
     var line = null;
     for( var iter = 0; iter < bookstops.length; ++iter){
         var bookstop = bookstops[iter];
-        // the data to append to the GUI object as a reference
-        var refData = null;
-        // create a marker
-        //console.log('bookstop number '+iter);
-        if(!(iter == bookstops.length -1)){
-            // in the first book location (expodium base) no reviews
-            // also in stops inbetween no reviews (the book clicked in this case is the book
-            // as its current location so we show only reviews there
-            refData = {type: bookstop.type, id: bookstop.id, ownerId: bookstop.ownerId};
-            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookstop), $H(refData));
-            xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForFirstBookTraceUser(bookstop),$H(refData));
-        }else{ 
-            // als deze laatste waar het boek nu is, ook degene is waarop is geklikt
-            // dan moet ie een extra eigenschap krijgen waardoor hij de volgende keer
-            // 'gaat toggelen' tussen weergaven vd gebruiker die hem nu heeft
-            // met al zijn comments en reviews, en de weergave die we kennen namelijk wit bolletje
+        var refData = {type: bookstop.type, id: bookstop.id, ownerId: bookstop.ownerId};
+        var breadcrumb = null;
+        // we have a different color for the current location of the book: white
+        if(iter == bookstops.length -1){
+            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H(refData));
+            // we have a special breadcrumb for the user who has the book now
+            breadcrumb = xpd.viz.breadcrumb.factorForLastBookTraceUser(bookstop);
             if(bookstop.id == bookId){
-                // probeer location string te achterhalen
+                // the last book was also the book clicked
+                var locationString = "location: " + bookstop.Ma + "," + bookstop.Na;
                 var latlng = new google.maps.LatLng(bookstop.Ma,bookstop.Na);
-                var locationString = 'unknown location';
                 vdvw.v.Const.GEOCODER.geocode({'latLng': latlng}, function(results, status) {
                     if (status == google.maps.GeocoderStatus.OK) {
-                        //console.log('status ok');
                         if(results[1]) locationString = results[1].formatted_address;
-                        var currentOwnerBox = xpd.viz.drawTeaser(bookstop.ownerName, locationString, xpd.viz.icon.factorForUser(bookstop));
-                    } else {/*console.log('niet ok')*/}
+                    }
+                    var currentOwnerBox = xpd.viz.drawTeaser(bookstop.ownerName, locationString, xpd.viz.icon.factorForUser(bookstop));
                 });
-                //console.log(locationString);
-                
-                markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H({type: bookstop.type, id: bookstop.id}));
-            }else{
-                markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H(refData));
             }
-            
-            // this is the current location that was clicked
-            xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForLastBookTraceUser(bookstop),$H(refData));
-            
-            // do support reviews
+        }else{
+            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookstop), $H(refData));
+            // our default breadcrumb for a user who has kept a book
+            breadcrumb = xpd.viz.breadcrumb.factorForBookTraceUser(bookstop);
+        }
+        // we draw a line from utrecht / expodium to the first book location
+        if(markerFrom == null){
+            var utloc = xpd.LOCATION_UTRECHT();
+            var utrechtLatLng = new google.maps.LatLng(utloc.Ma,utloc.Na);
+            line = xpd.viz.drawLine('#333', utrechtLatLng, markerTo.getPosition(), true, 1.5);
+            // we have a special breadcrumb for the first user who received this book
+            breadcrumb = xpd.viz.breadcrumb.factorForFirstBookTraceUser(bookstop);
+        }else{
+            line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
+        }
+        // in any case
+        markerFrom = markerTo;
+        var bc = xpd.viz.drawBreadCrumb(breadcrumb, refData);
+        var bkSpan = bc.find(".bookPrintId");
+        bkSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:bookstop.ownerId}));
+        bkSpan.click(vdvw.c.onClick);
+        var wnSpan = bc.find(".bookPrintOwnerName");
+        wnSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:bookstop.ownerId}));
+        wnSpan.click(vdvw.c.onClick);
+        // case clicked book, show reviews and comments
+        if(bookId == bookstop.id){
             reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
-            
             // draw the reviews (all reviews for one book stop have the same color)
             //var rndColor = colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
             for( var it2 = 0; it2<reviews.length; ++it2){
@@ -2389,8 +2325,13 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
                 var revMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review), $H(refDataRev));
                 var line = xpd.viz.drawLine('#c00', markerTo.getPosition(), revMarker.getPosition(), false, 1);
                 if(iter == bookstops.length -1){
-                    // only the current book location's additions are explained
-                    xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(refDataRev));
+                    var bc = xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(refDataRev));
+                    var ownerSpan = bc.find(".reviewOwnerName");
+                    ownerSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:review.reviewedBook.ownerId}));
+                    ownerSpan.click(vdvw.c.onClick);
+                    var headSpan = bc.find(".reviewHead");
+                    headSpan.data('refData', $H({type:xpd.Review.EntityName(),id:review.id}));
+                    headSpan.click(vdvw.c.onClick);
                 }
             }
             // if our hero user also commented on others, we are now going to show that, too
@@ -2404,11 +2345,6 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
                 xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCommentByUser(comment),$H(cmData));
             });
         }
-        
-        if(markerFrom != null){
-            line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
-        }
-        markerFrom = markerTo;
     }
 }
 vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
@@ -2769,7 +2705,7 @@ xpd.viz.icon.factorForReview = function (review) {
         labelContent: excerpt,
         labelAnchor: new google.maps.Point(-11, 36),
         labelClass: "marker-label reviewer",
-        title: 'Material was attached / added to the book: "' + review.head + '"'
+        title: 'review: "' + review.head + '"'
     });
 }
 xpd.viz.icon.factorForCenterPoint = function (center) {
@@ -2863,7 +2799,7 @@ xpd.viz.drawLine = function(webcolorString, from, to, krom, dik){
 xpd.viz.drawTeaser = function(name, address, refMarker){
     var neptext = 'Yeah, I like animals better than people sometimes... Especially dogs. Dogs are the best. Every time you come home, they act like they havent seen you in a year. And the good thing about dogs... is they got different dogs for different people. Like pit bulls. The dog of dogs. Pit bull can be the right mans best friend... or the wrong mans worst enemy. You going to give me a dog for a pet, give me a pit bull. Give me... Raoul. Right, Omar? Give me Raoul.';
     var excerpt = neptext.substring(0,50) + '...';
-    var contentString = '<div class="teaser pointer"><img src="app/images/site/pointer.png"/></div><div class="teaser head">' +'current owner:' + name +'</div>' + '<div class="teaser excerpt">'+ address + '</div>';
+    var contentString = '<div class="teaser pointer"><img src="app/images/site/pointer.png"/></div><div class="teaser head">' +'current owner:<br/>' + name +'</div>' + '<div class="teaser excerpt">'+ address + '</div>';
     var options = {
                  content: contentString
                 ,disableAutoPan: true
@@ -2927,12 +2863,12 @@ xpd.viz.drawBreadCrumb = function(bcDiv,refData){
         bcContainer.children().last().remove();
     }
     bcContainer.prepend(bcDiv);
-    bcContainer.children().first().data('refData', refData);
-    bcContainer.children().first().click(vdvw.c.onClick);
+    var result = bcContainer.children().first();
     xpd.viz.breadcrumb.fadeHistorically();
     if(xpd.viewState.toggleBreadcrumb){
-    	vdvw.c.breadcrumbExpand();
-	}
+        vdvw.c.breadcrumbExpand();
+    }
+    return result;
 }
 xpd.viz.drawContentPane = function(reviewDivContainingComments,refData){
     // heb ik hem al, zo ja moet ik hem WEL updaten maar wel op dezelfde plek houden
