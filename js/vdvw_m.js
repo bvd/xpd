@@ -1470,6 +1470,7 @@ vdvw.c.Startup = Class.create({
     fakeLocations: null,
     fakeDbKey: 0,
     initialize: function(args){
+	alert('heel gevat uit de hoek');
         jQuery('body').append(vdvw.v.FMapCanvas());
         vdvw.v.initMapCanvasStyles();
         vdvw.v.initGeocoder();
