@@ -411,8 +411,8 @@ xpd.Review = Class.create(vdvw.m.Entity,{
 });
 xpd.Review.EntityName = function(){return 'review';};
 xpd.Comment = Class.create(xpd.Review,{
-    initialize: function($super, id, type, time, head, content, ownerId, commentedEntityName, commentedId){
-        this.commentedEntityName = commentedEntityName;
+    initialize: function($super, id, type, time, head, content, ownerId, commentedEntityType, commentedId){
+        this.commentedEntityType = commentedEntityType;
         this.commentedId = commentedId;
         $super(id,type,time,head,content,ownerId);
     }
@@ -435,7 +435,6 @@ xpd.RANDOM_AVERAGE_COMMENTS_PER_REVIEW = function(){return 2;};
 xpd.Relations = {};
 xpd.Relations.isWith = function(){return 'isWith';};
 xpd.Relations.has = function(){return 'has';};
-xpd.SelectedBook = -1;
 xpd.SkipCurrentBookLocations = [];
 
 /**
@@ -457,34 +456,27 @@ xpd.Mapped.StateObject = Class.create({
         this.Na = Na;
     }
 })
-xpd.Mapped.UserWithBook = Class.create(xpd.Mapped.StateObject,{
-    initialize: function($super, type, id, bookStateTimestamp, ownerMa, ownerNa, ownerId, ownerName){
-        this.ownerId = ownerId;
-        this.ownerName = ownerName;
-        this.hTime =  xpd.Mappers.convertToHumanReadableLocalTimeString(bookStateTimestamp);
-        this.hId = (parseInt(id)+1)+'';
-        $super(type, id, bookStateTimestamp, ownerMa, ownerNa);
-    }
-})
 xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
     initialize: function($super, type, id, bookStateTimestamp, ownerMa, ownerNa, ownerId, ownerName){
         this.ownerId = ownerId;
         this.ownerName = ownerName;
         this.hTime =  xpd.Mappers.convertToHumanReadableLocalTimeString(bookStateTimestamp);
         this.hId = (parseInt(id)+1)+'';
+        this.ownerType = xpd.User.EntityName();
         $super(type, id, bookStateTimestamp, ownerMa, ownerNa);
     }
 })
 xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
-    initialize: function($super, type, id, time, locMa, locNa, ownerId, ownerMa, ownerNa, ownerName, head, content, commentedEntityName, commentedEntityId, commentedEntityHead){
+    initialize: function($super, type, id, time, locMa, locNa, ownerId, ownerMa, ownerNa, ownerName, head, content, commentedEntityType, commentedEntityId, commentedEntityHead){
         this.ownerId = ownerId;
         this.ownerName = ownerName;
         this.ownerMa = ownerMa;
         this.ownerNa = ownerNa;
+        this.ownerType = xpd.User.EntityName();
         this.hTime = xpd.Mappers.convertToHumanReadableLocalTimeString(time);
         this.head = head;
         this.content = content;
-        this.commentedEntityName = commentedEntityName;
+        this.commentedEntityType = commentedEntityType;
         this.commentedEntityId = commentedEntityId;
         this.commentedEntityHead = commentedEntityHead;
         $super(type, id, time, locMa, locNa);
@@ -502,6 +494,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
         this.hTime = xpd.Mappers.convertToHumanReadableLocalTimeString(review.time);
         this.head = review.head;
         this.content = review.content;
+        this.ownerType = xpd.User.EntityName();
         $super(review.type, review.id, review.time, reviewLocation.Ma, reviewLocation.Na);
     }
 })
@@ -557,6 +550,9 @@ xpd.Mappers.getBookStopForUserId = function (userId) {
     var location = xpd.Mappers.getLocationForUserId(primUser.id);
     return new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), hist[0].from, hist[0].__vdvwt, location.Ma, location.Na, primUser.id, primUser.uName);
 }
+/**
+ * returns array of xpd.Mapped.BookStop
+ */
 xpd.Mappers.getTraceForBook = function(bookId){
     // get all stayWith relations for this book, history included
     var bookIsWithUserRecordsUnfiltered = xpd.Mappers.getRelationOfBookStayWithUser(bookId,true);
@@ -604,7 +600,7 @@ xpd.Mappers.getLocationForCommentId = function(commentId){
 }
 xpd.Mappers.getMappedCommentsForReviewId = function(reviewId){
     var mappedComments = [];
-    var commentsQStr = 'where commentedEntityName is ' + xpd.Review.EntityName() + ', commentedId is ' + reviewId;
+    var commentsQStr = 'where commentedEntityType is ' + xpd.Review.EntityName() + ', commentedId is ' + reviewId;
     var q = vdvw.m.DataBase.createQuery(commentsQStr);
     var tbl = xpd.db.table(xpd.Comment.EntityName());
     var ret = [];
@@ -638,10 +634,10 @@ xpd.Mappers.getMappedCommentForComment = function(comment){
     var ownerNa = ownerLocation.Na;
     var head = comment.head;
     var content = comment.content;
-    var commentedEntityName = comment.commentedEntityName;
+    var commentedEntityType = comment.commentedEntityType;
     var commentedEntityId = comment.commentedId;
-    var commentedEntityHead = xpd.db.table(comment.commentedEntityName).select(comment.commentedId).head;
-    return new xpd.Mapped.MappedComment(type,id,time,locMa,locNa,ownerId,ownerMa,ownerNa,ownerName,head,content,commentedEntityName,commentedEntityId, commentedEntityHead);
+    var commentedEntityHead = xpd.db.table(comment.commentedEntityType).select(comment.commentedId).head;
+    return new xpd.Mapped.MappedComment(type,id,time,locMa,locNa,ownerId,ownerMa,ownerNa,ownerName,head,content,commentedEntityType,commentedEntityId, commentedEntityHead);
 }
 xpd.Mappers.getCommentsForUser = function (ownerId) {
     var ret = [];
@@ -683,7 +679,7 @@ xpd.Mappers.getBookAtCurrentLocationForId = function(id){
         var getLocationQ = vdvw.m.DataBase.createQuery('where id is ' + locationId);
         var location = xpd.db.table(xpd.Location.EntityName()).select(getLocationQ)[0];
         // create mapped object
-        var mpd = new xpd.Mapped.UserWithBook(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
+        var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
         ret.push(mpd);
     });
     return ret;
@@ -714,7 +710,7 @@ xpd.Mappers.getBooksAtCurrentLocations = function(){
             var getLocationQ = vdvw.m.DataBase.createQuery('where id is ' + locationId);
             var location = xpd.db.table(xpd.Location.EntityName()).select(getLocationQ)[0];
             // create mapped object
-            var mpd = new xpd.Mapped.UserWithBook(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
+            var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
             ret.push(mpd);
         }
     });
@@ -755,6 +751,7 @@ vdvw.v.Const.GEOCODER = function(){return vdvw.v.Const.GEOCODER;};
 
 vdvw.v.Const.bookIcon = function(){return 'app/images/site/book_icon.png';}
 vdvw.v.Const.stopIcon = function(){return 'app/images/site/stop_icon8.png';}
+vdvw.v.Const.stopIconNoLabel = function(){return 'app/images/site/stop_icon9.png';}
 vdvw.v.Const.reviewIcon = function(){return 'app/images/site/review.png';}
 vdvw.v.Const.commentIcon = function(){return 'app/images/site/comment.png';}
 vdvw.v.Const.expodiumIcon = function(){return 'app/images/site/expodiumIcon.png';}
@@ -1798,9 +1795,6 @@ vdvw.c.onBreadcrumbClick = function(event){
     	vdvw.c.breadcrumbExpand();           
     }
 }
-/**
- * find out which type and id were clicked
- */
 vdvw.c.onClick = function(e){
     var type = null;
     var id = null;
@@ -1808,14 +1802,14 @@ vdvw.c.onClick = function(e){
         type = e.fcf_type;
         id = e.fcf_id;
     }else{
-        var classes = jQuery(this).attr("class").split(" ");
-        classes.each(function(className){
-            if(className.substr(0,9) == "fcf_type_"){
-                type = className.substr(9);
-            }else if(className.substr(0,7) == "fcf_id_"){
-                id = className.substr(7);
-            }
-        });
+        var id = jQuery(this).attr("id");
+        // e.g. "fcf-user-3"
+        if(!(id.substr(0,4) == "fcf-")){
+            alert("id in handler not an fcf typed id, this should not happen");
+        }
+        var idSplit = id.split("-");
+        type = idSplit[1];
+        id = idSplit[2];
     }
     if(null == type || null == id){
         alert("type and id of clicked item were not found, this should not happen")
@@ -2036,13 +2030,14 @@ vdvw.c.afterInit = function(){
  */
 vdvw.c.VisualizeCurrentBooks = function(){
     xpd.flush.clearMap();
-    xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForAllCurrentBooks());
+    xpd.viz.drawBreadCrumb(jQuery('#allBooks').render());
     vdvw.c.ShowBookLocations();
 }
 vdvw.c.ShowBookLocations = function(){
     var booksWithUsers = xpd.Mappers.getBooksAtCurrentLocations();
     booksWithUsers.each(function(bookWithUser){
-        xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserDrop(bookWithUser), bookWithUser.type, bookWithUser.id);
+        var icon = xpd.viz.icon.factorForBookWithUserDrop(bookWithUser);
+        xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookWithUser.ownerId);
     });
 }
 vdvw.c.ShowBookLocationSelected = function(selectId){
@@ -2055,24 +2050,12 @@ vdvw.c.ShowBookLocationsExcept = function(exceptId){
         var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bk), bk.type, bk.id);
     });
 }
-vdvw.c.closeFaqAndAbout = function(){
-    if(xpd.viewState.toggleFAQ){
-        xpd.viewState.toggleFAQ = false;
-        jQuery('#faq-wrap').fadeOut();
-    } 
-    if(xpd.viewState.toggleAbout){
-        xpd.viewState.toggleAbout = false;
-        jQuery('#about-text').fadeOut();
-    }
-}
-/**
- * visualize an item for Id and Type
- */
 vdvw.c.VisualizeConnections = function(type,id){
     vdvw.c.closeFaqAndAbout();
     xpd.flush.clearMap();
     if(type == xpd.BookPrint.EntityName()){
-        vdvw.c.VisualizeTraceForBook(id);
+        var currentBookstop = xpd.Mappers.getBookAtCurrentLocationForId(id)[0];
+        vdvw.c.VisualizeTraceForBook(id, currentBookstop.ownerId);
     }
     else if(type == xpd.Comment.EntityName()){
         vdvw.c.VisualizeConnectionsForCommentId(id);
@@ -2080,190 +2063,63 @@ vdvw.c.VisualizeConnections = function(type,id){
     else if(type == xpd.Review.EntityName()){
     	vdvw.c.VisualizeConnectionsForReviewId(id);
     }
+    else if(type == xpd.User.EntityName()){
+    	var bookstop = xpd.Mappers.getBookStopForUserId(id);
+        vdvw.c.VisualizeTraceForBook(bookstop.id, id);
+        vdvw.c.VisualizeActionsForUserId(id);
+    }
     else{
         alert("cannot display type: " + type);
     }
 }
-vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
-    //console.log('VisualizeConnectionsForReviewId');
-    xpd.flush.clearMap();
-    //draw review marker
-    var refData;
-    var review = xpd.Mappers.getMappedReviewForReview(xpd.Mappers.getReviewForId(reviewId));
-	// TODO - why has a review part of its data duplicate?
-	/**
-	 * e.g. review:
-	 *
-	{
-	   "ownerId":"5",
-	   "ownerName":"kangaroo",
-	   "hTime":"19-2-2012 2:23",
-	   "head":"wang pang",
-	   "content":"chen chun ni haw",
-	   "type":"review",
-	   "id":"1",
-	   "timestamp":"1329614621",
-	   "Ma":"22.396428",
-	   "Na":"114.10949700000003",
-	   "review":{
-		  "time":"1329614621",
-		  "head":"wang pang",
-		  "content":"chen chun ni haw",
-		  "ownerId":"5",
-		  "type":"review",
-		  "id":"1",
-		  "ownerName":"kangaroo"
-	   },
-	   "reviewedBook":{
-		  "ownerId":"5",
-		  "ownerName":"kangaroo",
-		  "hTime":"21-7-2012 8:41",
-		  "hId":"4",
-		  "type":"book",
-		  "id":"3",
-		  "timestamp":1342852862,
-		  "Ma":"-35.2819998",
-		  "Na":"149.12868430000003"
-	   },
-	   "ownerLocation":{
-		  "Ma":"-35.2819998",
-		  "Na":"149.12868430000003",
-		  "type":"location",
-		  "id":"5",
-		  "ownerName":"kangaroo"
-	   },
-	   "reviewLocation":{
-		  "Ma":"22.396428",
-		  "Na":"114.10949700000003",
-		  "type":"location",
-		  "id":"6"
-	   },
-	   "mappedComments":[
-		  {
-			 "ownerId":"5",
-			 "ownerName":"kangaroo",
-			 "ownerMa":"-35.2819998",
-			 "ownerNa":"149.12868430000003",
-			 "hTime":"19-2-2012 3:1",
-			 "head":"lekkerrr",
-			 "content":"jaja",
-			 "commentedEntityName":"review",
-			 "commentedEntityId":"1",
-			 "commentedEntityHead":"wang pang",
-			 "type":"comment",
-			 "id":"1",
-			 "timestamp":"1329616909",
-			 "Ma":"52.3702157",
-			 "Na":"4.895167899999933"
-		  },
-		  {
-			 "ownerId":"4",
-			 "ownerName":"afrika",
-			 "ownerMa":"-1.2920659",
-			 "ownerNa":"36.82194619999996",
-			 "hTime":"19-2-2012 3:6",
-			 "head":"london",
-			 "content":"new york",
-			 "commentedEntityName":"review",
-			 "commentedEntityId":"1",
-			 "commentedEntityHead":"wang pang",
-			 "type":"comment",
-			 "id":"3",
-			 "timestamp":"1329617193",
-			 "Ma":"48.856614",
-			 "Na":"2.3522219000000177"
-		  },
-		  {
-			 "ownerId":"8",
-			 "ownerName":"bert",
-			 "ownerMa":"52.1561113",
-			 "ownerNa":"52.1561113",
-			 "hTime":"28-5-2012 21:31",
-			 "head":"sweet",
-			 "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
-			 "commentedEntityName":"review",
-			 "commentedEntityId":"1",
-			 "commentedEntityHead":"wang pang",
-			 "type":"comment",
-			 "id":"6",
-			 "timestamp":"1338233492",
-			 "Ma":"32.3182314",
-			 "Na":"-86.90229799999997"
-		  }
-	   ]
-	}
-	*/
-	//
-	// generate ref data for the view (todo: typed refdata)
-	//
-	var reviewRefData = {id:review.id, type:xpd.Review.EntityName()};
-	//
-	//
-	// display the review on the map
-	//
-	//
-	var reviewerMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review),$H(reviewRefData));
-        review.mappedComments.each(function(comment){
-    	var commentRefData = {id:comment.id, type:xpd.Comment.EntityName()};
-    	var cmMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(comment),$H(commentRefData));
-        var commentToReviewLine = xpd.viz.drawLine('#333', cmMarker.getPosition(), reviewerMarker.getPosition(), false, 1);
+/*vdvw.c.VisualizeActionsOfLatestUserForBook = function(id){
+    // TODO - visualize when it has them
+    var bookWithUser = xpd.Mappers.getBookAtCurrentLocationForId(id);
+    this.VisualizeActionsForUserId(bookWithUser[0].ownerId);
+}*/
+vdvw.c.VisualizeActionsForUserId = function(userId){
+    var comments = xpd.Mappers.getCommentsForUser(userId);
+    var reviews = xpd.Mappers.getReviewsForBookOwner(userId);
+    reviews.each(function(review){
+        vdvw.c.VisualizeReview(review);
     });
-	//
-	//
-	// display the review owner on the map
-	//
-	//
-	var reviewOwnerRefData = {ownerId:review.ownerId, type:xpd.BookPrint.EntityName(), id:review.reviewedBook.id};
-    review.ownerLocation.ownerName = review.ownerName;
-    var bookAtCurrentLocationRR = xpd.Mappers.getBookAtCurrentLocationForId(review.reviewedBook.id);
-    xpd.SelectedBook = review.reviewedBook.id;
-    if(!(bookAtCurrentLocationRR[0].ownerId == review.reviewedBook.ownerId))
-        var owner = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(review.ownerLocation),$H(reviewOwnerRefData));
-    else
-        var owner = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(review.reviewedBook), $H(reviewOwnerRefData));
-        xpd.viz.drawLine('#c00', owner.getPosition(), reviewerMarker.getPosition(), false, 1);
-	//
-	//
-	// display the review as a breadcrumb
-	//
-	//
-	var bc = xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(reviewRefData));
-        var ownerSpan = bc.find(".reviewOwnerName");
-        ownerSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:review.reviewedBook.ownerId}));
-        ownerSpan.click(vdvw.c.onClick);
-        var headSpan = bc.find(".reviewHead");
-        headSpan.data('refData', $H({type:xpd.Review.EntityName(),id:review.id}));
-        headSpan.click(vdvw.c.onClick);
-        //
-        //
-	//
-	//
-	// show or open the review in the content pane
-	//
-	//
-	xpd.viz.drawContentPane(xpd.viz.contentpane.factorForReview(review),$H(reviewRefData));
-}
-vdvw.c.drawTeaserForIcon = function(ownerName, Ma, Na, targetMarker){
-    var defaultLocationString = "location: " + Ma + "," + Na;
-    var geocodedLocationString = "";
-    var latlng = new google.maps.LatLng(Ma,Na);
-    vdvw.v.Const.GEOCODER.geocode({'latLng': latlng}, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-            if(results[1]){
-                geocodedLocationString = results[1].formatted_address;
-            }
-        }
-        if(geocodedLocationString == ""){
-            xpd.viz.drawTeaser(ownerName, defaultLocationString, targetMarker);
-        }else{
-            xpd.viz.drawTeaser(ownerName, geocodedLocationString, targetMarker);
-        }
-
+    comments.each(function(comment){
+        vdvw.c.VisualizeComment(comment);
     });
 }
-vdvw.c.VisualizeTraceForBook = function(bookId){
+/*vdvw.c.VisualizeUserWithTeaser = function(userId){
+    
+    var bookstop = xpd.Mappers.getBookStopForUserId(userId);
+    var bookstopNow = xpd.Mappers.getBookAtCurrentLocationForId(bookstop.id);
+    var icon = xpd.viz.icon.factorForBookWithUserWhite(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.id);
+    var markerTo = xpd.viz.drawIcon(icon, xpd.BookPrint.EntityName(), bookstop.id);
+    var bookId = bookstop.id;
+    var isCurrentOwner = bookstop.ownerId == bookstopNow.ownerId;
+    vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo, bookId, isCurrentOwner);
+    
+}*/
+vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter){
+    var icon = xpd.viz.icon.factorForComment(mappedComment);
+    var comMarker = xpd.viz.drawIcon(icon, mappedComment.type, mappedComment.id);
+    var lineFromLocation = new google.maps.LatLng(mappedComment.ownerMa, mappedComment.ownerNa); 
+    var line = xpd.viz.drawLine('#688', lineFromLocation, comMarker.getPosition(), false, 1);
+    xpd.viz.drawBreadCrumb(jQuery("#commentByUser").render(mappedComment));
+    if(visualizeCommenter){
+        vdvw.c.VisualizeUserOnTheMap(mappedComment.ownerId);
+    }
+    return comMarker;
+}
+vdvw.c.VisualizeReview = function(mappedReview){
+    var icon = xpd.viz.icon.factorForReview(mappedReview);
+    var revMarker = xpd.viz.drawIcon(icon, mappedReview.type, mappedReview.id);
+    var lineFromLocation = new google.maps.LatLng(mappedReview.ownerLocation.Ma, mappedReview.ownerLocation.Na);
+    var line = xpd.viz.drawLine('#c00', lineFromLocation, revMarker.getPosition(), false, 1);
+    xpd.viz.drawBreadCrumb(jQuery("#currentBookReview").render(mappedReview));
+}
+vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
     var bookstops = xpd.Mappers.getTraceForBook(bookId);
     var markerFrom = null;
+    var returnMarker = null;
     for( var iter = 0; iter < bookstops.length; ++iter){
         
         var isFirstBookStop = iter == 0;
@@ -2273,7 +2129,7 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
         var bookstop = bookstops[iter];
         
         var type = xpd.User.EntityName();
-        var id = bookstop.id;
+        var id = bookstop.ownerId;
         
         var initLocation = xpd.LOCATION_UTRECHT();
         var initLatLng = new google.maps.LatLng(initLocation.Ma,initLocation.Na);
@@ -2283,56 +2139,50 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
         var line = null;
         var markerTo = null;
         
-        
+        var userIcon = null;
+        var userIsSelectedUser = selectedUserId == bookstop.ownerId;
         
         if(isFirstBookStop){
-            var icon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
-            markerTo = xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookstop.ownerId);
+            if(userIsSelectedUser) userIcon = xpd.viz.icon.factorForUserNoLabel(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            else userIcon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            markerTo = xpd.viz.drawIcon(userIcon, type, id);
             line = xpd.viz.drawLine('#333', initLatLng, markerTo.getPosition(), true, 1.5);
-            breadcrumb = xpd.viz.breadcrumb.factorForFirstBookTraceUser(
-                xpd.BookPrint.EntityName(), 
-                bookstop.id, 
-                xpd.User.EntityName(), 
-                bookstop.ownerName, 
-                bookstop.ownerId, 
-                "hoe laat is het"
-            );
+            breadcrumb = jQuery('#bookTraceFirst').render(bookstop);
         }
         else if(isNormalBookStop){
-            var icon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
-            markerTo = xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookstop.ownerId);
+            if(userIsSelectedUser) userIcon = xpd.viz.icon.factorForUserNoLabel(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            else userIcon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            markerTo = xpd.viz.drawIcon(userIcon, type, id);
             line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
+            breadcrumb = jQuery('#bookTrace').render(bookstop);
         }
         else{
             var icon = xpd.viz.icon.factorForBookWithUserWhite(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.id);
-            markerTo = xpd.viz.drawIcon(icon, xpd.BookPrint.EntityName(), bookstop.id);
+            markerTo = xpd.viz.drawIcon(icon, type, id);
             line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
-            breadcrumb = xpd.viz.breadcrumb.factorForLastBookTraceUser(
-                xpd.BookPrint.EntityName(), 
-                bookstop.id, 
-                xpd.User.EntityName(), 
-                bookstop.ownerName, 
-                bookstop.ownerId, 
-                "hoe laat is het"
-            );
-            vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo);
+            breadcrumb = jQuery('#bookTraceLast').render(bookstop);
         }
         
         markerFrom = markerTo;
         var bc = xpd.viz.drawBreadCrumb(breadcrumb, type, id);
-        continue;
         
+        if(typeof(selectedUserId) != "undefined"){
+            if(id == selectedUserId){
+                vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo, bookstop.id, isLastBookStop);
+            }
+        }
         
+        continue; // TODO - remove
         // TODO - (re)move
-        
         // case clicked book, show reviews and comments
+        /*
         if(bookId == bookstop.id){
-            reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
+            var reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
             // draw the reviews (all reviews for one book stop have the same color)
             //var rndColor = colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
             for( var it2 = 0; it2<reviews.length; ++it2){
                 var review = reviews[it2];
-                var refDataRev = {type: review.type, id: review.id, ownerId: review.ownerId};
+                //var refDataRev = {type: review.type, id: review.id, ownerId: review.ownerId};
                 var revMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review), $H(refDataRev));
                 var line = xpd.viz.drawLine('#c00', markerTo.getPosition(), revMarker.getPosition(), false, 1);
                 if(iter == bookstops.length -1){
@@ -2350,15 +2200,55 @@ vdvw.c.VisualizeTraceForBook = function(bookId){
             var cmColor = '#677D91';
             //colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
             comments.each(function(comment){
-                var cmData = {ownerId:bookstop.ownerId, id:comment.id, type:xpd.Comment.EntityName()};
+                //var cmData = {ownerId:bookstop.ownerId, id:comment.id, type:xpd.Comment.EntityName()};
                 var cmMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(comment), $H(cmData));
                 line = xpd.viz.drawLine(cmColor, markerTo.getPosition(), cmMarker.getPosition(), false, 1);
                 xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCommentByUser(comment),$H(cmData));
             });
-        }
+        }*/
+        
     }
+    
+        
+    
+    return returnMarker;
 }
+vdvw.c.VisualizeUserOnTheMap = function(userId){
+    var userBookStop = xpd.Mappers.getBookStopForUserId(userId);
+    var bookstopNow = xpd.Mappers.getBookAtCurrentLocationForId(userBookStop.id)[0];
+    var ownerHasBookNow = bookstopNow.ownerId == userBookStop.ownerId;
+    var userIcon;
+    var userMarker;
+    if(!ownerHasBookNow){
+        userIcon = xpd.viz.icon.factorForUser(userBookStop.Ma, userBookStop.Na, userBookStop.ownerName, userBookStop.id);
+    }else{
+        userIcon = xpd.viz.icon.factorForBookWithUserWhite(userBookStop.Ma, userBookStop.Na, userBookStop.ownerName, userBookStop.id);
+    }
+    userMarker = xpd.viz.drawIcon(userIcon, userBookStop.ownerType, userBookStop.ownerId);
+}
+vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
+    xpd.flush.clearMap();
+    var review = xpd.Mappers.getMappedReviewForReview(xpd.Mappers.getReviewForId(reviewId));
+    vdvw.c.VisualizeUserOnTheMap(review.ownerId);
+    var reviewMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review), review.type, review.id);
+    var reviewerLocation = new google.maps.LatLng(review.ownerLocation.Ma, review.ownerLocation.Na);
+    xpd.viz.drawLine('#c00', reviewerLocation, reviewMarker.getPosition(), false, 1);
+    var bc = xpd.viz.drawBreadCrumb(jQuery('#currentBookReview').render(review));
+    review.mappedComments.each(function(comment){
+        var commentMarker = vdvw.c.VisualizeComment(comment,true);
+        xpd.viz.drawLine('#c00', commentMarker.getPosition(), reviewMarker.getPosition(), false, 1);
+    });
+    var factoredReview = xpd.viz.contentpane.factorForReview(review);
+    var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview);
+    var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, review.mappedComments);
+    reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
+    reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
+}
+
+
 vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
+    alert("comment " + commentId);
+    return;
     //console.log('VisualizeConnectionsForCommentId');
     // a comment basically connects two users
     // it has following parameters
@@ -2378,7 +2268,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
 	   "hTime":"28-5-2012 21:31",
 	   "head":"sweet",
 	   "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
-	   "commentedEntityName":"review",
+	   "commentedEntityType":"review",
 	   "commentedEntityId":"1",
 	   "commentedEntityHead":"wang pang",
 	   "type":"comment",
@@ -2388,7 +2278,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
 	   "Na":"-86.90229799999997"
 	}
 	 */
-    var commented = (mappedComment.commentedEntityName == xpd.Review.EntityName()) ? xpd.Review.EntityName() : null;
+    var commented = (mappedComment.commentedEntityType == xpd.Review.EntityName()) ? xpd.Review.EntityName() : null;
 	commented = xpd.Mappers.getMappedReviewForReview(xpd.db.table(commented).select(mappedComment.commentedEntityId));
     if(!(commented instanceof xpd.Mapped.MappedReview)){
         return;
@@ -2449,7 +2339,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
              "hTime":"19-2-2012 3:1",
              "head":"lekkerrr",
              "content":"jaja",
-             "commentedEntityName":"review",
+             "commentedEntityType":"review",
              "commentedEntityId":"1",
              "commentedEntityHead":"wang pang",
              "type":"comment",
@@ -2466,7 +2356,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
              "hTime":"19-2-2012 3:6",
              "head":"london",
              "content":"new york",
-             "commentedEntityName":"review",
+             "commentedEntityType":"review",
              "commentedEntityId":"1",
              "commentedEntityHead":"wang pang",
              "type":"comment",
@@ -2483,7 +2373,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
              "hTime":"28-5-2012 21:31",
              "head":"sweet",
              "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
-             "commentedEntityName":"review",
+             "commentedEntityType":"review",
              "commentedEntityId":"1",
              "commentedEntityHead":"wang pang",
              "type":"comment",
@@ -2495,7 +2385,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
        ]
     }
     */
-    var commentRefData = {ownerId:mappedComment.ownerId, id:mappedComment.id, type:xpd.Comment.EntityName()};
+    //var commentRefData = {ownerId:mappedComment.ownerId, id:mappedComment.id, type:xpd.Comment.EntityName()};
 	//
 	//
 	// visualize on the map
@@ -2527,11 +2417,11 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
 	var bookStopOfCommenter = xpd.Mappers.getBookStopForUserId(mappedComment.ownerId);
     // is de bookstop aka reviewer die de comment geplaatst heeft dezelfde als degene die de review plaatste?
     var commenterAndReviewerAreTheSame = bookStopOfCommenter.id == commented.ownerId;
-    var commentedEntityRefData = {type: commented.type, id: commented.id, ownerId: commented.ownerId};
+    //var commentedEntityRefData = {type: commented.type, id: commented.id, ownerId: commented.ownerId};
     var commentedEntityMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(commented), $H(commentedEntityRefData));
     var commentToCommentedEntityLine = xpd.viz.drawLine(toCommentedEntityColorAlsoToOtherUser, commentMarker.getPosition(), commentedEntityMarker.getPosition(), false, 1);
     var bookStopOfReviewer = xpd.Mappers.getBookStopForUserId(commented.ownerId);
-    var reviewOwnerRefData = {type: bookStopOfReviewer.type, id: bookStopOfReviewer.id, ownerId: bookStopOfReviewer.ownerId};
+    //var reviewOwnerRefData = {type: bookStopOfReviewer.type, id: bookStopOfReviewer.id, ownerId: bookStopOfReviewer.ownerId};
     var currentLocationOfThisBook = xpd.Mappers.getBookAtCurrentLocationForId(bookStopOfReviewer.id)[0];
     if(currentLocationOfThisBook.ownerId == bookStopOfReviewer.ownerId){
         // wit bolletje
@@ -2547,7 +2437,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
 	// visualize the commenter
 	//
 	//
-    var commentingUserRefData = {type: bookStopOfCommenter.type, id: bookStopOfCommenter.id, ownerId: bookStopOfCommenter.ownerId};
+    //var commentingUserRefData = {type: bookStopOfCommenter.type, id: bookStopOfCommenter.id, ownerId: bookStopOfCommenter.ownerId};
     var commentingUserMarker = null;
     if(commenterAndReviewerAreTheSame){
         // kunnen we het lijntje naar diegene trekken
@@ -2580,6 +2470,37 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
 	});
 	xpd.viz.contentpane.selectComment(mappedComment.id, commented.id);
 }
+
+
+
+vdvw.c.drawTeaserForIcon = function(ownerName, Ma, Na, targetMarker, bookId, isCurrentOwner){
+    var defaultLocationString = "location: " + Ma + "," + Na;
+    var geocodedLocationString = "";
+    var latlng = new google.maps.LatLng(Ma,Na);
+    vdvw.v.Const.GEOCODER.geocode({'latLng': latlng}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            if(results[1]){
+                geocodedLocationString = results[1].formatted_address;
+            }
+        }
+        if(geocodedLocationString == ""){
+            xpd.viz.drawTeaser(ownerName, defaultLocationString, targetMarker, bookId, isCurrentOwner);
+        }else{
+            xpd.viz.drawTeaser(ownerName, geocodedLocationString, targetMarker, bookId, isCurrentOwner);
+        }
+
+    });
+}
+vdvw.c.closeFaqAndAbout = function(){
+    if(xpd.viewState.toggleFAQ){
+        xpd.viewState.toggleFAQ = false;
+        jQuery('#faq-wrap').fadeOut();
+    } 
+    if(xpd.viewState.toggleAbout){
+        xpd.viewState.toggleAbout = false;
+        jQuery('#about-text').fadeOut();
+    }
+}
 /**
  * SHOW SOMETHING ON THE SCREEN
  */
@@ -2610,7 +2531,7 @@ xpd.viz.contentpane.factorForReview = function (review) {
     return jQuery('#reviewExpanded').render(review);
 }
 xpd.viz.contentpane.addCommentsToReview = function(jq_review, mappedComments){
-	var JQ_reviewDiv = jq_review;
+    var JQ_reviewDiv = jq_review;
     var JQ_commentsContainer = JQ_reviewDiv.find(".commentsContainer");
     mappedComments.each(function(mappedComment){
 		var factoredComment = xpd.viz.contentpane.factorForComment(mappedComment);
@@ -2674,46 +2595,16 @@ xpd.viz.contentpane.selectComment = function(mappedCommentId, reviewIdOption){
 	
 	*/
 }
-xpd.viz.breadcrumb.factorForBookWithUser = function (bookWithUser) { 
-    return jQuery('#bookWithUser').render(bookWithUser);
-}
-xpd.viz.breadcrumb.factorForAllCurrentBooks = function(){   
-    return jQuery('#allBooks').render();
-}
-xpd.viz.breadcrumb.factorForFirstBookTraceUser = function (bookType,bookId,ownerType,ownerName,ownerId,hTime) {
-    var data = {
-        bookType: bookType,
-        bookId: bookId,
-        ownerType: ownerType,
-        ownerName: ownerName,
-        ownerId: ownerId,
-        hTime: hTime
-    };
-    return jQuery('#bookTraceFirst').render(data);
-}
-xpd.viz.breadcrumb.factorForLastBookTraceUser = function (bookType,bookId,ownerType,ownerName,ownerId,hTime) {
-    var data = {
-        bookType: bookType,
-        bookId: bookId,
-        ownerType: ownerType,
-        ownerName: ownerName,
-        ownerId: ownerId,
-        hTime: hTime
-    };
-    return jQuery('#bookTraceLast').render(data);
-}
-xpd.viz.breadcrumb.factorForBookTraceUser = function (bookWithUser) {
-    return jQuery('#bookTrace').render(bookWithUser);
-}
-xpd.viz.breadcrumb.factorForCurrentBookReview = function (review) {
-   return jQuery('#currentBookReview').render(review);
-}
-xpd.viz.breadcrumb.factorForUserFocusOnBookstop = function (bookstop) {
-    return jQuery('#userFocusOnBookstop').render(bookstop);
-}
-xpd.viz.breadcrumb.factorForCommentByUser = function (comment) {
-    return jQuery('#commentByUser').render(comment);
-}
+/**
+jQuery('#bookWithUser').render(bookWithUser);
+
+
+
+
+
+jQuery('#userFocusOnBookstop').render(bookstop);
+jQuery('#commentByUser').render(comment);
+ */
 xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
     return new MarkerWithLabel({
         position: new google.maps.LatLng( Ma, Na ),
@@ -2721,6 +2612,13 @@ xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
         labelContent: userName,
         labelAnchor: new google.maps.Point(-2, 35),
         labelClass: "marker-label user",
+        title: vdvw.v.Const.bookTitle(userId, userName)
+    });
+}
+xpd.viz.icon.factorForUserNoLabel = function (Ma, Na, userName, userId) {
+    return new google.maps.Marker({
+        position: new google.maps.LatLng( Ma, Na ),
+        icon: vdvw.v.Const.stopIconNoLabel(),
         title: vdvw.v.Const.bookTitle(userId, userName)
     });
 }
@@ -2823,10 +2721,20 @@ xpd.viz.drawLine = function(webcolorString, from, to, krom, dik){
     xpd.flush.addLine(line);
     return line;
 }
-xpd.viz.drawTeaser = function(name, address, refMarker){
+xpd.viz.drawTeaser = function(name, address, refMarker, bookId, isCurrentOwner){
     var neptext = 'Yeah, I like animals better than people sometimes... Especially dogs. Dogs are the best. Every time you come home, they act like they havent seen you in a year. And the good thing about dogs... is they got different dogs for different people. Like pit bulls. The dog of dogs. Pit bull can be the right mans best friend... or the wrong mans worst enemy. You going to give me a dog for a pet, give me a pit bull. Give me... Raoul. Right, Omar? Give me Raoul.';
     var excerpt = neptext.substring(0,50) + '...';
-    var contentString = '<div class="teaser pointer"><img src="app/images/site/pointer.png"/></div><div class="teaser head">' +'current owner:<br/>' + name +'</div>' + '<div class="teaser excerpt">'+ address + '</div>';
+    var contentString = '<div class="teaser pointer">' + 
+                            '<img src="app/images/site/pointer.png"/>'  + 
+                        '</div>' + 
+                        '<div class="teaser head">' + 
+                            'book ' + bookId;
+    contentString +=        isCurrentOwner ? ' is with:' : '  earlier:';
+    contentString +=        '<br/>' + name + 
+                        '</div>' +
+                        '<div class="teaser excerpt">' + 
+                            address +
+                        '</div>';
     var options = {
                  content: contentString
                 ,disableAutoPan: true
@@ -2884,7 +2792,7 @@ xpd.viz.drawOwnedTeaser = function(bookId, bookOwner, refMarker){
     //ib.setContent(renderContentForObject(content));
     ib.open(vdvw.v.Const.MAP(),refMarker);
 }
-xpd.viz.drawBreadCrumb = function(bcDiv,refData){
+xpd.viz.drawBreadCrumb = function(bcDiv){
     var bcContainer = jQuery("#breadcrumb");
     if(bcContainer.children().length > vdvw.v.Const.MAX_ELEMENTS_IN_BREADCRUMB()){
         bcContainer.children().last().remove();
@@ -2895,9 +2803,9 @@ xpd.viz.drawBreadCrumb = function(bcDiv,refData){
     if(xpd.viewState.toggleBreadcrumb){
         vdvw.c.breadcrumbExpand();
     }
-    return result;
+    result.find(".fcf-click").click(vdvw.c.onClick);
 }
-xpd.viz.drawContentPane = function(reviewDivContainingComments,refData){
+xpd.viz.drawContentPane = function(reviewDivContainingComments){
     // heb ik hem al, zo ja moet ik hem WEL updaten maar wel op dezelfde plek houden
 	// heb ik hem nog niet, bovenaan erbij
 	// expand the content pane
@@ -2913,20 +2821,19 @@ xpd.viz.drawContentPane = function(reviewDivContainingComments,refData){
             });
     }
     var contentPane = jQuery("#contentpane");
-	var refDataObj = refData.toObject();
 	var replaced = false;
 	var JQ_reviewDiv = jQuery(reviewDivContainingComments);
 	contentPane.children().each(function(index,reviewElement){
-		if(jQuery(reviewElement).data('refData').toObject().id == refDataObj.id){
+		/*if(jQuery(reviewElement).data('refData').toObject().id == refDataObj.id){
 			jQuery(reviewElement).replaceWith(JQ_reviewDiv);
 			replaced = true;
-		}
+		}*/
 	});
 	if(!replaced){
 		contentPane.prepend(JQ_reviewDiv);
 	}
 	JQ_reviewDiv = jQuery(contentPane).find(JQ_reviewDiv);
-	JQ_reviewDiv.data('refData',refData);
+	//JQ_reviewDiv.data('refData',refData);
 
     if(contentPane.children().length > vdvw.v.Const.MAX_ELEMENTS_IN_CONTENTPANE()){
         contentPane.children().last().remove();
@@ -2974,3 +2881,8 @@ xpd.flush.addTeaser = function(teaser){
 */
 xpd.db = null;
 xpd.viewState = new vdvw.v.ViewStateObject();
+xpd.argsToObject = function(fn){
+    var args = fn.arguments;
+    var argNames = fn.argumentNames();
+    
+}

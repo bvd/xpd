@@ -81,13 +81,13 @@ body {margin-top:0;}
         <p>In the beginning, twenty publications of "DETROIT: BACK TO THE FUTURE/ARCHIVE OF IMPRESSIONS" were sent all over the earth's surface....</p>
     </script>
     <script id="bookTraceFirst" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> Expodium Foundation sent <span class="fcf-click" id="fcf-{{=bookType}}-{{=bookId}}">book {{=bookId}}</span> to <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>. <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> Expodium Foundation sent <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">book {{=id}}</span> to <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>. <span class="time">({{=hTime}})</span></p>
     </script>
     <script id="bookTrace" type="text/x-jquery-tmpl">
         <p><span class="bookPrintId klk">Book {{=hId}}</span> was then sent to <span class="bookPrintOwnerName klk">{{=ownerName}}</span>. <span class="time">({{=hTime}})</span></p>
     </script>
     <script id="bookTraceLast" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=bookType}}-{{=bookId}}">Book {{=bookId}}</span> is currently residing with <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>... <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">Book {{=id}}</span> is currently residing with <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>... <span class="time">({{=hTime}})</span></p>
     </script>
     <script id="bookWithUser" type="text/x-jquery-tmpl">
         <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> currently stays with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>. <span class="time">({{=hTime}})</span></p>
@@ -95,18 +95,14 @@ body {margin-top:0;}
     <script id="bookStop" type="text/x-jquery-tmpl">
         <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> also stayed with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>. <span class="time">({{=hTime}})</span></p>
     </script>
-
-    <!-- google map located elements -->
-    <!-- google map located elements -->
-    <!-- google map located elements -->
     <script id="currentBookReview" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="reviewOwnerName klk">{{=ownerName}}</span> added material to the book: "<span class="reviewHead klk">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span> posted: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
     </script>
-    <script id="userFocusOnBookstop" type="text/x-jquery-tmpl">
+    <!--<script id="userFocusOnBookstop" type="text/x-jquery-tmpl">
         <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="reviewOwnerName klk">{{=ownerName}}</span> has received <span class="bookPrintId klk">book print number {{=hId}}</span>". <span class="time">({{=hTime}})</span></p>
-    </script>
+    </script>-->
     <script id="commentByUser" type="text/x-jquery-tmpl">
-        <p><span class="commentOwnerName klk">{{=ownerName}}</span>, when he saw: "<span class="commentedHead klk">{{=commentedEntityHead}}</span>", had this to say: "<span class="commentHead, klk">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>, when he saw: "<span class="fcf-click" id="fcf-{{=commentedEntityType}}-{{=commentedEntityId}}">{{=commentedEntityHead}}</span>", had this to say: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
     </script>
     <!-- content pane elements -->
     <!-- content pane elements -->
@@ -120,7 +116,7 @@ body {margin-top:0;}
                     </span>
                     {{=head}}
                 </span>
-                <span class="reviewOwnerName"></br>by {{=ownerName}}</span>
+                <span class="reviewOwnerName fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}"></br>by {{=ownerName}}</span>
             </div>
             <div>
                 <span class="add-comment-button" onclick="vdvw.c.onAddCommentClick({{=id}})">add comment</span>
@@ -143,9 +139,9 @@ body {margin-top:0;}
                     </span>
                     {{=head}}
                 </span>
-                <span class="commentOwnerName"></br>by {{=ownerName}}</span> 
+                <span class="commentOwnerName fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}"></br>by {{=ownerName}}</span> 
                 in reaction to 
-                <span class="commentedHead">{{=commentedEntityHead}}</span>
+                <span class="commentedHead fcf-click" id="fcf-{{=commentedEntityType}}-{{=commentedEntityId}}">{{=commentedEntityHead}}</span>
             </div>
             <div>
                 <span class="vdvw-delete-button" onclick="vdvw.c.onDeleteClick('{{=type}}',{{=id}},'{{=head}}')">delete</span>
