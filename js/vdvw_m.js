@@ -1798,30 +1798,29 @@ vdvw.c.onBreadcrumbClick = function(event){
     	vdvw.c.breadcrumbExpand();           
     }
 }
-vdvw.c.onClick = function(event){
-    //jQuery('#contentpane').jScrollPane();
-    //jQuery('#contentpane').jScrollPane();
-    var representedData;
-    if(event.hasOwnProperty('refData')){
-        representedData = event.refData;
+/**
+ * find out which type and id were clicked
+ */
+vdvw.c.onClick = function(e){
+    var type = null;
+    var id = null;
+    if(e.hasOwnProperty("fcf_type") && e.hasOwnProperty("fcf_id")){
+        type = e.fcf_type;
+        id = e.fcf_id;
     }else{
-        var thisObject = jQuery(this);
-        if(!(undefined == thisObject.data('refData'))){
-            representedData = thisObject.data('refData');
-        }
+        var classes = jQuery(this).attr("class").split(" ");
+        classes.each(function(className){
+            if(className.substr(0,9) == "fcf_type_"){
+                type = className.substr(9);
+            }else if(className.substr(0,7) == "fcf_id_"){
+                id = className.substr(7);
+            }
+        });
     }
-    if(xpd.viewState.toggleFAQ){
-        xpd.viewState.toggleFAQ = false;
-        jQuery('#faq-wrap').fadeOut();
-    } 
-    if(xpd.viewState.toggleAbout){
-        xpd.viewState.toggleAbout = false;
-        jQuery('#about-text').fadeOut();
-    }
-    if(representedData == undefined){
-        vdvw.c.VisualizeCurrentBooks();
+    if(null == type || null == id){
+        alert("type and id of clicked item were not found, this should not happen")
     }else{
-        vdvw.c.VisualizeConnections(representedData.toObject());
+        vdvw.c.VisualizeConnections(type,id);
     }
 }
 vdvw.c.onMouseOver = function(event){
@@ -1862,7 +1861,7 @@ vdvw.c.onLogoutClick = function(event){
 }
 vdvw.c.dataRefresh = function(type,id){
     drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
-        xpd.flush.flushAll();
+        xpd.flush.clearMap();
         xpd.db = new vdvw.m.DataBase();
         var rs = rsp.getData.result;
         // we will iterate (a lot)
@@ -2036,77 +2035,58 @@ vdvw.c.afterInit = function(){
  * CONTROLLERS THAT PULL DATA FROM THE MAPPERS AND PUSH TO THE VIZ
  */
 vdvw.c.VisualizeCurrentBooks = function(){
-    xpd.flush.flushAll();
-    //console.log('will now visualize books');
+    xpd.flush.clearMap();
     xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForAllCurrentBooks());
-    // get all the books (array of UserWithBook objects)
-    var locUt = xpd.LOCATION_UTRECHT();
-    var locUtrecht = new google.maps.LatLng(locUt.Ma, locUt.Na);
+    vdvw.c.ShowBookLocations();
+}
+vdvw.c.ShowBookLocations = function(){
     var booksWithUsers = xpd.Mappers.getBooksAtCurrentLocations();
     booksWithUsers.each(function(bookWithUser){
-        var refData = {type: bookWithUser.type, id: bookWithUser.id};
-        var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserDrop(bookWithUser), $H(refData));
-        //var t=setTimeout(xpd.viz.drawLine('#333', locUtrecht, bookIcon.getPosition(), true, 1),500);
-        
-        //xpd.viz.drawLine('#333', locUtrecht, bookIcon.getPosition(), true, 1);
+        xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserDrop(bookWithUser), bookWithUser.type, bookWithUser.id);
     });
 }
-vdvw.c.VisualizeConnections = function(refData){
-    xpd.flush.flushAll();
-    xpd.SelectedBook = -1;
-    xpd.SkipCurrentBookLocations = [];
-    var hasOwnerId = false;
-    if(refData.type == xpd.BookPrint.EntityName()/* && !refData.hasOwnProperty('ownerId')*/){
-        vdvw.c.VisualizeTraceForBook(refData.id);
-        hasOwnerId = true;
-        return; // tmp
-    }
-    /*if(refData.type == xpd.BookPrint.EntityName() && refData.hasOwnProperty('ownerId')){
-        vdvw.c.VisualizeTraceForBookAtBookStop(refData.id, refData.ownerId);
-    }*/
-    if(refData.type == xpd.Comment.EntityName()){
-        vdvw.c.VisualizeConnectionsForCommentId(refData.id);
-    }
-    if(refData.type == xpd.Review.EntityName()){
-    	vdvw.c.VisualizeConnectionsForReviewId(refData.id);
-        //console.log('viz review en id ='+refData.id);
-    }
-    
-    var locUt = xpd.LOCATION_UTRECHT();
-    var locUtrecht = new google.maps.LatLng(locUt.Ma, locUt.Na);
+vdvw.c.ShowBookLocationSelected = function(selectId){
+    var bk = xpd.Mappers.getBookAtCurrentLocationForId(selectId);
+    var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bk), bk.id, bk.type);
+}
+vdvw.c.ShowBookLocationsExcept = function(exceptId){
     var booksWithUsers = xpd.Mappers.getBooksAtCurrentLocations();
-    
-    var skipIconForBook = {};
-    for(var i = 0; i < xpd.SkipCurrentBookLocations.length; i++){
-         skipIconForBook[xpd.SkipCurrentBookLocations[i]] = 1;
-    }
-    
-    booksWithUsers.each(function(bookWithUser){
-        
-       
-        //console.log('refdata id = '+refData.id+' en bookId = '+bookWithUser.id);
-        var locationString;
-        if(refData.id == bookWithUser.id){
-            var refData2 = {type: bookWithUser.type, id: bookWithUser.id};
-        } else {
-            // draw normal book icon (gray
-            if(skipIconForBook[bookWithUser.id] == 1) return;
-            var refData2 = {type: bookWithUser.type, id: bookWithUser.id};
-            if(xpd.SelectedBook != -1) {
-                if(xpd.SelectedBook == bookWithUser.id){
-                    var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookWithUser), $H(refData2));
-                    return;
-                }
-             }
-           // "else" 
-           var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bookWithUser), $H(refData2));
-        }
+    booksWithUsers.each(function(bk){
+        var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bk), bk.type, bk.id);
     });
-    
+}
+vdvw.c.closeFaqAndAbout = function(){
+    if(xpd.viewState.toggleFAQ){
+        xpd.viewState.toggleFAQ = false;
+        jQuery('#faq-wrap').fadeOut();
+    } 
+    if(xpd.viewState.toggleAbout){
+        xpd.viewState.toggleAbout = false;
+        jQuery('#about-text').fadeOut();
+    }
+}
+/**
+ * visualize an item for Id and Type
+ */
+vdvw.c.VisualizeConnections = function(type,id){
+    vdvw.c.closeFaqAndAbout();
+    xpd.flush.clearMap();
+    if(type == xpd.BookPrint.EntityName()){
+        vdvw.c.VisualizeTraceForBook(id);
+    }
+    else if(type == xpd.Comment.EntityName()){
+        vdvw.c.VisualizeConnectionsForCommentId(id);
+    }
+    else if(type == xpd.Review.EntityName()){
+    	vdvw.c.VisualizeConnectionsForReviewId(id);
+    }
+    else{
+        alert("cannot display type: " + type);
+    }
 }
 vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
     //console.log('VisualizeConnectionsForReviewId');
-    xpd.flush.flushAll();
+    xpd.flush.clearMap();
     //draw review marker
     var refData;
     var review = xpd.Mappers.getMappedReviewForReview(xpd.Mappers.getReviewForId(reviewId));
@@ -2263,59 +2243,88 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
 	//
 	xpd.viz.drawContentPane(xpd.viz.contentpane.factorForReview(review),$H(reviewRefData));
 }
+vdvw.c.drawTeaserForIcon = function(ownerName, Ma, Na, targetMarker){
+    var defaultLocationString = "location: " + Ma + "," + Na;
+    var geocodedLocationString = "";
+    var latlng = new google.maps.LatLng(Ma,Na);
+    vdvw.v.Const.GEOCODER.geocode({'latLng': latlng}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            if(results[1]){
+                geocodedLocationString = results[1].formatted_address;
+            }
+        }
+        if(geocodedLocationString == ""){
+            xpd.viz.drawTeaser(ownerName, defaultLocationString, targetMarker);
+        }else{
+            xpd.viz.drawTeaser(ownerName, geocodedLocationString, targetMarker);
+        }
+
+    });
+}
 vdvw.c.VisualizeTraceForBook = function(bookId){
-    //console.log('VisualizeTraceForBook');
     var bookstops = xpd.Mappers.getTraceForBook(bookId);
     var markerFrom = null;
-    var markerTo = null;
-    var reviews = null;
-    var colors = vdvw.v.Const.getColorsArray();
-    //var commentTo = null;
-    var line = null;
     for( var iter = 0; iter < bookstops.length; ++iter){
+        
+        var isFirstBookStop = iter == 0;
+        var isLastBookStop = iter == bookstops.length -1;
+        var isNormalBookStop = !isLastBookStop && !isFirstBookStop;
+        
         var bookstop = bookstops[iter];
-        var refData = {type: bookstop.type, id: bookstop.id, ownerId: bookstop.ownerId};
+        
+        var type = xpd.User.EntityName();
+        var id = bookstop.id;
+        
+        var initLocation = xpd.LOCATION_UTRECHT();
+        var initLatLng = new google.maps.LatLng(initLocation.Ma,initLocation.Na);
+        
         var breadcrumb = null;
-        // we have a different color for the current location of the book: white
-        if(iter == bookstops.length -1){
-            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookstop), $H(refData));
-            // we have a special breadcrumb for the user who has the book now
-            breadcrumb = xpd.viz.breadcrumb.factorForLastBookTraceUser(bookstop);
-            if(bookstop.id == bookId){
-                // the last book was also the book clicked
-                var locationString = "location: " + bookstop.Ma + "," + bookstop.Na;
-                var latlng = new google.maps.LatLng(bookstop.Ma,bookstop.Na);
-                vdvw.v.Const.GEOCODER.geocode({'latLng': latlng}, function(results, status) {
-                    if (status == google.maps.GeocoderStatus.OK) {
-                        if(results[1]) locationString = results[1].formatted_address;
-                    }
-                    var currentOwnerBox = xpd.viz.drawTeaser(bookstop.ownerName, locationString, xpd.viz.icon.factorForUser(bookstop));
-                });
-            }
-        }else{
-            markerTo = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookstop), $H(refData));
-            // our default breadcrumb for a user who has kept a book
-            breadcrumb = xpd.viz.breadcrumb.factorForBookTraceUser(bookstop);
+        
+        var line = null;
+        var markerTo = null;
+        
+        
+        
+        if(isFirstBookStop){
+            var icon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            markerTo = xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookstop.ownerId);
+            line = xpd.viz.drawLine('#333', initLatLng, markerTo.getPosition(), true, 1.5);
+            breadcrumb = xpd.viz.breadcrumb.factorForFirstBookTraceUser(
+                xpd.BookPrint.EntityName(), 
+                bookstop.id, 
+                xpd.User.EntityName(), 
+                bookstop.ownerName, 
+                bookstop.ownerId, 
+                "hoe laat is het"
+            );
         }
-        // we draw a line from utrecht / expodium to the first book location
-        if(markerFrom == null){
-            var utloc = xpd.LOCATION_UTRECHT();
-            var utrechtLatLng = new google.maps.LatLng(utloc.Ma,utloc.Na);
-            line = xpd.viz.drawLine('#333', utrechtLatLng, markerTo.getPosition(), true, 1.5);
-            // we have a special breadcrumb for the first user who received this book
-            breadcrumb = xpd.viz.breadcrumb.factorForFirstBookTraceUser(bookstop);
-        }else{
+        else if(isNormalBookStop){
+            var icon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
+            markerTo = xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookstop.ownerId);
             line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
         }
-        // in any case
+        else{
+            var icon = xpd.viz.icon.factorForBookWithUserWhite(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.id);
+            markerTo = xpd.viz.drawIcon(icon, xpd.BookPrint.EntityName(), bookstop.id);
+            line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
+            breadcrumb = xpd.viz.breadcrumb.factorForLastBookTraceUser(
+                xpd.BookPrint.EntityName(), 
+                bookstop.id, 
+                xpd.User.EntityName(), 
+                bookstop.ownerName, 
+                bookstop.ownerId, 
+                "hoe laat is het"
+            );
+            vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo);
+        }
+        
         markerFrom = markerTo;
-        var bc = xpd.viz.drawBreadCrumb(breadcrumb, refData);
-        var bkSpan = bc.find(".bookPrintId");
-        bkSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:bookstop.ownerId}));
-        bkSpan.click(vdvw.c.onClick);
-        var wnSpan = bc.find(".bookPrintOwnerName");
-        wnSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:bookstop.ownerId}));
-        wnSpan.click(vdvw.c.onClick);
+        var bc = xpd.viz.drawBreadCrumb(breadcrumb, type, id);
+        continue;
+        
+        
+        // TODO - (re)move
+        
         // case clicked book, show reviews and comments
         if(bookId == bookstop.id){
             reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
@@ -2671,11 +2680,27 @@ xpd.viz.breadcrumb.factorForBookWithUser = function (bookWithUser) {
 xpd.viz.breadcrumb.factorForAllCurrentBooks = function(){   
     return jQuery('#allBooks').render();
 }
-xpd.viz.breadcrumb.factorForFirstBookTraceUser = function (bookWithUser) {
-    return jQuery('#bookTraceFirst').render(bookWithUser);
+xpd.viz.breadcrumb.factorForFirstBookTraceUser = function (bookType,bookId,ownerType,ownerName,ownerId,hTime) {
+    var data = {
+        bookType: bookType,
+        bookId: bookId,
+        ownerType: ownerType,
+        ownerName: ownerName,
+        ownerId: ownerId,
+        hTime: hTime
+    };
+    return jQuery('#bookTraceFirst').render(data);
 }
-xpd.viz.breadcrumb.factorForLastBookTraceUser = function (bookWithUser) {
-    return jQuery('#bookTraceLast').render(bookWithUser);
+xpd.viz.breadcrumb.factorForLastBookTraceUser = function (bookType,bookId,ownerType,ownerName,ownerId,hTime) {
+    var data = {
+        bookType: bookType,
+        bookId: bookId,
+        ownerType: ownerType,
+        ownerName: ownerName,
+        ownerId: ownerId,
+        hTime: hTime
+    };
+    return jQuery('#bookTraceLast').render(data);
 }
 xpd.viz.breadcrumb.factorForBookTraceUser = function (bookWithUser) {
     return jQuery('#bookTrace').render(bookWithUser);
@@ -2689,14 +2714,14 @@ xpd.viz.breadcrumb.factorForUserFocusOnBookstop = function (bookstop) {
 xpd.viz.breadcrumb.factorForCommentByUser = function (comment) {
     return jQuery('#commentByUser').render(comment);
 }
-xpd.viz.icon.factorForUser = function (bookWithUser) {
+xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
     return new MarkerWithLabel({
-        position: new google.maps.LatLng( bookWithUser.Ma, bookWithUser.Na ),
+        position: new google.maps.LatLng( Ma, Na ),
         icon: vdvw.v.Const.stopIcon(),
-        labelContent: bookWithUser.ownerName,
+        labelContent: userName,
         labelAnchor: new google.maps.Point(-2, 35),
         labelClass: "marker-label user",
-        title: vdvw.v.Const.bookTitle(bookWithUser.id, bookWithUser.ownerName)
+        title: vdvw.v.Const.bookTitle(userId, userName)
     });
 }
 xpd.viz.icon.factorForReview = function (review) {
@@ -2738,12 +2763,11 @@ xpd.viz.icon.factorForBookWithUser = function (bookWithUser) {
         title: vdvw.v.Const.bookTitle(bookWithUser.id, bookWithUser.ownerName)
     });
 }
-xpd.viz.icon.factorForBookWithUserWhite = function (bookWithUser) {
-    //alert('white');
+xpd.viz.icon.factorForBookWithUserWhite = function (Ma,Na,userName,userId) {
     return new google.maps.Marker({
-        position: new google.maps.LatLng( bookWithUser.Ma, bookWithUser.Na ),
-        icon: vdvw.v.Const.iconForBookWhite(bookWithUser.id),
-        title: vdvw.v.Const.bookTitle(bookWithUser.id, bookWithUser.ownerName),
+        position: new google.maps.LatLng( Ma, Na ),
+        icon: vdvw.v.Const.iconForBookWhite(userId),
+        title: vdvw.v.Const.bookTitle(userId, userName),
         zIndex: 999
     });
 }
@@ -2763,7 +2787,7 @@ xpd.viz.teaser.factorForReview = function (review) {
         title: vdvw.v.Const.reviewTitle(review.id, review.ownerName)
     });
 }
-xpd.viz.drawIcon = function(icon, refData){
+xpd.viz.drawIcon = function(icon, type, id){
     google.maps.event.addListenerOnce(icon, 'click', (function(icon){
         return function(){vdvw.c.onClick(icon);}
     })(icon));
@@ -2773,7 +2797,8 @@ xpd.viz.drawIcon = function(icon, refData){
     })(icon));
     icon.setMap(vdvw.v.Const.MAP());
     xpd.flush.addMarker(icon);
-    icon.refData = refData;
+    icon.fcf_type = type;
+    icon.fcf_id = id;
     return icon;
 }
 xpd.viz.drawLine = function(webcolorString, from, to, krom, dik){
@@ -2917,7 +2942,7 @@ xpd.flush = {};
 xpd.flush.markers = [];
 xpd.flush.lines = [];
 xpd.flush.teasers = [];
-xpd.flush.flushAll = function(){
+xpd.flush.clearMap = function(){
     xpd.flush.lines.each(function(line){
         line.setMap(null);
         google.maps.event.clearInstanceListeners(line);
