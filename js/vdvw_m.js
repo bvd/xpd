@@ -1309,8 +1309,6 @@ vdvw.v.initMapCanvasStyles = function(){
                                                     stylers: [
                                                       {visibility: "off"}
                                                     ]
-                                              },{
-                                                    featureType: "landscape.man_made"
                                               }
                                             ];
 
@@ -1419,13 +1417,13 @@ vdvw.v.initMapCanvasStyles = function(){
 
     google.maps.event.addListener(vdvw.v.Const.Map, 'zoom_changed', function() {
             var zoomLevel = vdvw.v.Const.Map.getZoom();
-
+            alert('zoom changed to level:' +zoomLevel);
             if(vdvw.v.Const.Map.getZoom() > 3){
-                    vdvw.v.Const.Map.setMapTypeId('expodium2');
+                    vdvw.v.Const.Map.setMapTypeId('expodium3');
                     vdvw.v.clearAbstractMap();
             }
             if(vdvw.v.Const.Map.getZoom() > 5){
-                    vdvw.v.Const.Map.setMapTypeId('expodium3');
+                    vdvw.v.Const.Map.setMapTypeId('expodium2');
                     //alert('zoom > 6');
                     vdvw.v.clearAbstractMap();
             }
