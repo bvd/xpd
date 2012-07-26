@@ -2087,17 +2087,6 @@ vdvw.c.VisualizeActionsForUserId = function(userId){
         vdvw.c.VisualizeComment(comment);
     });
 }
-/*vdvw.c.VisualizeUserWithTeaser = function(userId){
-    
-    var bookstop = xpd.Mappers.getBookStopForUserId(userId);
-    var bookstopNow = xpd.Mappers.getBookAtCurrentLocationForId(bookstop.id);
-    var icon = xpd.viz.icon.factorForBookWithUserWhite(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.id);
-    var markerTo = xpd.viz.drawIcon(icon, xpd.BookPrint.EntityName(), bookstop.id);
-    var bookId = bookstop.id;
-    var isCurrentOwner = bookstop.ownerId == bookstopNow.ownerId;
-    vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo, bookId, isCurrentOwner);
-    
-}*/
 vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter){
     var icon = xpd.viz.icon.factorForComment(mappedComment);
     var comMarker = xpd.viz.drawIcon(icon, mappedComment.type, mappedComment.id);
@@ -2304,7 +2293,7 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
         heightCount += JQ_reviewDiv.outerHeight();
         if(vdvw.c.identify(JQ_reviewDiv.attr("id")).id == reviewId){
             JQ_selectedReview = JQ_reviewDiv;
-            heightCount -= JQ_selectedReview.find(".commentsContainer").outerHeight();
+            heightCount -= JQ_reviewDiv.outerHeight();
             break;
         }
         iter++;
@@ -2328,7 +2317,7 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
             var pane = jQuery('#contentpane-wrapper');
             var api = pane.data('jsp');
             api.scrollToY(heightCount+'');
-    },3000);
+    },1000);
 }
 xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
     return new MarkerWithLabel({
