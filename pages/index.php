@@ -403,7 +403,7 @@ body {margin-top:0;}
     <script id="drpFirstReviewTPL" type="text/x-jquery-tmpl">
         <div title="want to add something?" class="drpDialog">
             <fieldset class="drpFirstReviewForm">
-                <span>After you added a review you may also comment on others.</span>
+                <span>Please add a review first.</span>
                 <button id="ok">OK</button>
             </fieldset>
         </div>

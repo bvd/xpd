@@ -148,7 +148,9 @@ drp.postTR = function(transaction, callback, userErrorCallback){
             if(userErrorCallback == undefined || userErrorCallback == null){
                 alert(dataString);
             }else{
-                userErrorCallback(responseObject[transaction.id].error);
+                var code = responseObject[transaction.id].error.code;
+                var message = responseObject[transaction.id].error.message;
+                userErrorCallback(message,code);
             }
         }else{
             callback(responseObject);
@@ -216,12 +218,18 @@ drp.test.loginDialog = function(){
                 jQuery("#login-name").append(userName);
                 jQuery("#login-name").show();           
             },
-            function(errorMessage){
+            function(errorMessage, errorCode){
+                var hMess = null;
+                if(errorMessage == "0-auth fail 4"){
+                    hMess = "unknown user";
+                }else if(errorMessage == "0-auth fail 6"){
+                    hMess = "wrong password";
+                }
                 jQuery('.drpLoginForm .errorText').fadeOut('fast', function() {
                     jQuery(".drpLoginForm .errorText").fadeIn();
                 });                 
                 jQuery(".drpLoginForm .errorText").empty();
-                jQuery(".drpLoginForm .errorText").append(errorMessage);
+                jQuery(".drpLoginForm .errorText").append(hMess == null ? errorMessage : hMess);
                 jQuery(".drpLoginForm .forgotPassword").fadeIn();
             });
         });
@@ -513,7 +521,10 @@ drp.test.createSubscriptionDialog = function(token){
                                 jQuery(dl).dialog('close');
                                 drp.test.registerSuccessDialog(rsp.submitUser.result);
                                 jQuery("#login-link").hide();
+                                jQuery("#now-what").hide();
                                 jQuery("#logout-link").show();
+                                jQuery("#login-name").append(user.loginName);
+                                jQuery("#login-name").show();
                             }
                         }
                     );
@@ -689,6 +700,7 @@ drp.test.addCommentDialog = function(commentedEntityId, commentedEntityType){
                         function(rsp){
                             if(rsp.hasReviewed.result.numReviews == 0){
                                 drp.test.informFirstReviewDialog();
+                                return;
                             }
                             var dl = drp.createDialog(jQuery('#drpAddCommentTPL').render({
                                 commentedEntityId:commentedEntityId, 
