@@ -208,6 +208,7 @@ drp.test.loginDialog = function(){
                 jQuery(dl).dialog('close');
                 //remove login btn
                 jQuery("#login-link").hide();
+                jQuery("#now-what").hide();
                 // add logout btn
                 jQuery("#logout-link").show();
                 var userName = rsp.login.result.userScreenName;

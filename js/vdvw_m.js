@@ -1442,7 +1442,7 @@ vdvw.v.drawExpodium = function(){
                     title: vdvw.v.Const.expodiumTooltipText(),
                     zIndex: 999999
     });
-    //google.maps.event.addListener(startMarker, 'click', vdvw.c.VisualizeCurrentBooks);
+    xpd.flush.markers.push(startMarker);
 }
 /**
  * GLOBALS FOR THE VIEW
@@ -1469,39 +1469,28 @@ vdvw.c.Startup = Class.create({
         jQuery('body').append(vdvw.v.FMapCanvas());
         vdvw.v.initMapCanvasStyles();
         vdvw.v.initGeocoder();
-        vdvw.v.drawExpodium();
         jQuery('body').append(vdvw.v.FProjectTitle());
         jQuery('body').append(vdvw.v.FBreadCrumbWrapper());
         jQuery('body').append(vdvw.v.FAboutLink());
-		
         jQuery('body').append(vdvw.v.FAboutText());
-		
         jQuery('body').append(vdvw.v.FFAQLink());
         jQuery('body').append(vdvw.v.FFAQText());
         jQuery('body').append(vdvw.v.FCover());
         jQuery('body').append(vdvw.v.FCredits());
         jQuery('body').append(vdvw.v.FLegendPic());
-		jQuery('body').append(vdvw.v.FLoginWrapper());
+	jQuery('body').append(vdvw.v.FLoginWrapper());
         jQuery('body').append(vdvw.v.FContentPaneWrapper());
-        //alert('hi B');
         jQuery('#breadcrumb').slideDown();
         jQuery('#contentpane-wrapper').jScrollPane({autoReinitialise: true, animateScroll: true, animateDuration: 6000});
-        //ernst
         jQuery('#faq-text').accordion({autoHeight:false, navigation:true, collapsible:false});
 		jQuery('#legend-pic').css('right',-1*vdvw.v.Const.LEGEND_PIC_CROP_RIGHT());
 		vdvw.v.adjust.aboutBlockDimensions();
-        //jQuery('#contentpane').jScrollPane();
-        //jQuery('#breadcrumb').hide();
         this.addPermanentEventListeners();
-        
         if(xpd.db == null){
-            //console.log('initializing database...');
             xpd.db = new vdvw.m.DataBase();
         }
         if(xpd.db == null){
-            //console.log('could not initialize database!');
-        }else{
-            //console.log('database initialization OK');
+            alert('error initializing local dataset');
         }
         if(fakeItBart == "true"){
             this.fakeLocations = xpd.FAKE_LOCATIONS();
@@ -1989,6 +1978,9 @@ vdvw.c.whoIsLoggedIn = function(){
             if(d.checkUser.result.id > 0){
                 jQuery("#login-link").hide();
                 jQuery("#logout-link").show();
+                jQuery("#now-what").hide();
+                jQuery("#login-name").append(d.checkUser.result.screenName);
+                jQuery("#login-name").show();
                 return;
             }
         }
@@ -2047,7 +2039,8 @@ vdvw.c.ShowBookLocationSelected = function(selectId){
 vdvw.c.ShowBookLocationsExcept = function(exceptId){
     var booksWithUsers = xpd.Mappers.getBooksAtCurrentLocations();
     booksWithUsers.each(function(bk){
-        var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bk), bk.type, bk.id);
+        if(bk.id == exceptId) return;
+        var bookIcon = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bk), bk.ownerType, bk.ownerId);
     });
 }
 vdvw.c.VisualizeConnections = function(type,id){
@@ -2067,6 +2060,7 @@ vdvw.c.VisualizeConnections = function(type,id){
     	var bookstop = xpd.Mappers.getBookStopForUserId(id);
         vdvw.c.VisualizeTraceForBook(bookstop.id, id);
         vdvw.c.VisualizeActionsForUserId(id);
+        vdvw.c.ShowBookLocationsExcept(bookstop.id);
     }
     else{
         alert("cannot display type: " + type);
@@ -2110,6 +2104,7 @@ vdvw.c.VisualizeReview = function(mappedReview,visualizeReviewer){
     return revMarker;
 }
 vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
+    vdvw.v.drawExpodium();
     var bookstops = xpd.Mappers.getTraceForBook(bookId);
     var markerFrom = null;
     var returnMarker = null;
@@ -2127,7 +2122,7 @@ vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
         var markerTo = null;
         var userIcon = null;
         var userIsSelectedUser = selectedUserId == bookstop.ownerId;
-        if(isFirstBookStop){
+        if(isFirstBookStop && !isLastBookStop){
             if(userIsSelectedUser) userIcon = xpd.viz.icon.factorForUserNoLabel(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
             else userIcon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
             markerTo = xpd.viz.drawIcon(userIcon, type, id);
@@ -2144,7 +2139,11 @@ vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
         else{
             var icon = xpd.viz.icon.factorForBookWithUserWhite(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.id);
             markerTo = xpd.viz.drawIcon(icon, type, id);
-            line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
+            if(isFirstBookStop){
+                line = xpd.viz.drawLine('#333', initLatLng, markerTo.getPosition(), true, 1.5);
+            }else{
+                line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
+            }
             breadcrumb = jQuery('#bookTraceLast').render(bookstop);
         }
         markerFrom = markerTo;

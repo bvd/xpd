@@ -81,28 +81,25 @@ body {margin-top:0;}
         <p>In the beginning, twenty publications of "DETROIT: BACK TO THE FUTURE/ARCHIVE OF IMPRESSIONS" were sent all over the earth's surface....</p>
     </script>
     <script id="bookTraceFirst" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> Expodium Foundation sent <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">book {{=id}}</span> to <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>. <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> Expodium Foundation sent <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">book {{=id}}</span> to <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>.</p>
     </script>
     <script id="bookTrace" type="text/x-jquery-tmpl">
         <p><span class="bookPrintId klk">Book {{=hId}}</span> was then sent to <span class="bookPrintOwnerName klk">{{=ownerName}}</span>. <span class="time">({{=hTime}})</span></p>
     </script>
     <script id="bookTraceLast" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">Book {{=id}}</span> is currently residing with <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>... <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=type}}-{{=id}}">Book {{=id}}</span> is currently residing with <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>...</p>
     </script>
     <script id="bookWithUser" type="text/x-jquery-tmpl">
-        <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> currently stays with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>. <span class="time">({{=hTime}})</span></p>
+        <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> currently stays with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>.</p>
     </script>
     <script id="bookStop" type="text/x-jquery-tmpl">
-        <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> also stayed with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>. <span class="time">({{=hTime}})</span></p>
+        <p><span class="bookPrintId klk">BookPrint no. {{=hId}}</span> also stayed with <img src="app/images/site/stop_icon8.png"/><span class="bookPrintOwnerName klk">{{=ownerName}}</span> at <span class="bookPrintOwnerLocation klk">Lat {{=Ma}}, Long {{=Na}}</span>.</p>
     </script>
     <script id="currentBookReview" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span> posted: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span> posted: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>".</p>
     </script>
-    <!--<script id="userFocusOnBookstop" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="reviewOwnerName klk">{{=ownerName}}</span> has received <span class="bookPrintId klk">book print number {{=hId}}</span>". <span class="time">({{=hTime}})</span></p>
-    </script>-->
     <script id="commentByUser" type="text/x-jquery-tmpl">
-        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>, when he saw: "<span class="fcf-click" id="fcf-{{=commentedEntityType}}-{{=commentedEntityId}}">{{=commentedEntityHead}}</span>", had this to say: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>". <span class="time">({{=hTime}})</span></p>
+        <p><span class="icon"><img src="app/images/site/stop_icon8.png"/></span> <span class="fcf-click" id="fcf-{{=ownerType}}-{{=ownerId}}">{{=ownerName}}</span>, when he saw: "<span class="fcf-click" id="fcf-{{=commentedEntityType}}-{{=commentedEntityId}}">{{=commentedEntityHead}}</span>", had this to say: "<span class="fcf-click" id="fcf-{{=type}}-{{=id}}">{{=head}}</span>".</p>
     </script>
     <!-- content pane elements -->
     <!-- content pane elements -->
@@ -254,7 +251,7 @@ body {margin-top:0;}
     <script id="drpGetQuestionTPL" type="text/x-jquery-tmpl">
         <div title="you received a book, now what?" class="drpDialog">
             <fieldset class="drpGetQuestionForm">
-                <span>Make sure you have the book at hand and get ready to answer a question about it.</span>
+                <span>Because a friend sent you our publication, we invite you to become part of our network. To verify that you actually have the book at hand, we require you to answer a question about it. Make sure you have the book at hand and proceed when ready...</span>
                 <button id="getQuestion">BRING IT ON</button>
             </fieldset>
         </div>
@@ -266,8 +263,9 @@ body {margin-top:0;}
                 <p>
                     <span>Question: <span id="question">{{=question}}</span></span><br/>
                     <span>Your answer: </span></br>
-                    <input 	id="answer" 	type="text" 	title="answer"        class="send"	/>
-                    <button id="tryOtherQuestion">TRY OTHER QUESTION</button>
+                    <input 	id="answer" 	type="text" 	title="answer"        class="send"	/><br/>
+                    If you have trouble answering this question, you may switch to another one.<br/>
+                    <button id="tryOtherQuestion">SWITCH</button>
                 </p>
                 <p>
                     <span>Please identify your book by entering the two-digit number following 'DBA_IDURLL' on the back: </span></br>
@@ -329,19 +327,17 @@ body {margin-top:0;}
             </div>
             <div class='formWrap' style="width:450px; height: auto;">
                 <fieldset class="drpCreateSubscriptionForm">
-                    <span>loginName (use this to login, you can only use basic alphanumeric characters): </span></br>
+                    <span>login name:<br/>(alphanumeric, e.g. 'cdarwin')</span></br>
                     <input 	id="loginName" 	type="text" 	title="loginName"        class="send"	/></br></br>
-                    <span>mail (the address where you received our invitation): </span>
+                    <span>e-mail:<br/>(to verify your subscription)</span><br/>
                     <input 	id="mail" 	type="text" 	title="mail"        class="send"	/></br></br>
-                    <span>userName (this is how others will see your name): </span>
+                    <span>full name:<br/>(e.g. 'Charles Darwin')</span><br/>
                     <input 	id="userName" 	type="text" 	title="userName"        class="send"	/></br></br>
-                    <span>password: </span></br>
+                    <span>password:<br/>(will be encrypted / secured)</span></br>
                     <input 	id="password" 	type="text" 	title="password"        class="send"	/></br></br>
-
                     <input 	id="locMa" 	type="hidden" 	title="locMa"        class="send"       />
                     <input 	id="locNa" 	type="hidden" 	title="locNa"        class="send"       />
                     <input 	id="token" 	type="hidden" 	title="token"        class="send"       />
-
                     <button id="submitSubscription">CREATE ACCOUNT</button>
                 </fieldset>
             </div>
