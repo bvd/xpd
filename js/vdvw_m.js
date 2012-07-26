@@ -1481,7 +1481,7 @@ vdvw.c.Startup = Class.create({
 	jQuery('body').append(vdvw.v.FLoginWrapper());
         jQuery('body').append(vdvw.v.FContentPaneWrapper());
         jQuery('#breadcrumb').slideDown();
-        jQuery('#contentpane-wrapper').jScrollPane({autoReinitialise: true, animateScroll: true, animateDuration: 6000});
+        jQuery('#contentpane-wrapper').jScrollPane({autoReinitialise: true, animateScroll: true, animateDuration: 800});
         jQuery('#faq-text').accordion({autoHeight:false, navigation:true, collapsible:false});
 		jQuery('#legend-pic').css('right',-1*vdvw.v.Const.LEGEND_PIC_CROP_RIGHT());
 		vdvw.v.adjust.aboutBlockDimensions();
@@ -2305,6 +2305,8 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
             var JQ_commentDiv = jQuery(commentDiv)
             if(vdvw.c.identify(JQ_commentDiv.attr("id")).id == commentIdNullable){
                     JQ_selectedComment = JQ_commentDiv;
+                    //todo change comment background
+                    JQ_commentDiv.css('background', '#888');
                     break;
             }else{
                     heightCount += JQ_commentDiv.outerHeight();
@@ -2316,7 +2318,7 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
             var pane = jQuery('#contentpane-wrapper');
             var api = pane.data('jsp');
             api.scrollToY(heightCount+'');
-    },1000);
+    },100);
 }
 xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
     return new MarkerWithLabel({
