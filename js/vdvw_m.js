@@ -1792,6 +1792,14 @@ vdvw.c.onBreadcrumbClick = function(event){
     	vdvw.c.breadcrumbExpand();           
     }
 }
+vdvw.c.identify = function(idString){
+    // e.g. "fcf-user-3"
+    if(!(idString.substr(0,4) == "fcf-")){
+        alert("id in vdvw.c.identify handler not an fcf typed id");
+    }
+    var idSplit = idString.split("-");
+    return {type:idSplit[1],id:idSplit[2]};
+}
 vdvw.c.onClick = function(e){
     var type = null;
     var id = null;
@@ -1799,14 +1807,9 @@ vdvw.c.onClick = function(e){
         type = e.fcf_type;
         id = e.fcf_id;
     }else{
-        var id = jQuery(this).attr("id");
-        // e.g. "fcf-user-3"
-        if(!(id.substr(0,4) == "fcf-")){
-            alert("id in handler not an fcf typed id, this should not happen");
-        }
-        var idSplit = id.split("-");
-        type = idSplit[1];
-        id = idSplit[2];
+        var identify = vdvw.c.identify(jQuery(this).attr("id"));
+        id = identify.id;
+        type = identify.type;
     }
     if(null == type || null == id){
         alert("type and id of clicked item were not found, this should not happen")
@@ -2106,39 +2109,35 @@ vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter){
     }
     return comMarker;
 }
-vdvw.c.VisualizeReview = function(mappedReview){
+vdvw.c.VisualizeReview = function(mappedReview,visualizeReviewer){
     var icon = xpd.viz.icon.factorForReview(mappedReview);
     var revMarker = xpd.viz.drawIcon(icon, mappedReview.type, mappedReview.id);
     var lineFromLocation = new google.maps.LatLng(mappedReview.ownerLocation.Ma, mappedReview.ownerLocation.Na);
     var line = xpd.viz.drawLine('#c00', lineFromLocation, revMarker.getPosition(), false, 1);
     xpd.viz.drawBreadCrumb(jQuery("#currentBookReview").render(mappedReview));
+    if(visualizeReviewer){
+        vdvw.c.VisualizeUserOnTheMap(mappedReview.ownerId);
+    }
+    return revMarker;
 }
 vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
     var bookstops = xpd.Mappers.getTraceForBook(bookId);
     var markerFrom = null;
     var returnMarker = null;
     for( var iter = 0; iter < bookstops.length; ++iter){
-        
         var isFirstBookStop = iter == 0;
         var isLastBookStop = iter == bookstops.length -1;
         var isNormalBookStop = !isLastBookStop && !isFirstBookStop;
-        
         var bookstop = bookstops[iter];
-        
         var type = xpd.User.EntityName();
         var id = bookstop.ownerId;
-        
         var initLocation = xpd.LOCATION_UTRECHT();
         var initLatLng = new google.maps.LatLng(initLocation.Ma,initLocation.Na);
-        
-        var breadcrumb = null;
-        
+        var breadcrumb = null; 
         var line = null;
         var markerTo = null;
-        
         var userIcon = null;
         var userIsSelectedUser = selectedUserId == bookstop.ownerId;
-        
         if(isFirstBookStop){
             if(userIsSelectedUser) userIcon = xpd.viz.icon.factorForUserNoLabel(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
             else userIcon = xpd.viz.icon.factorForUser(bookstop.Ma, bookstop.Na, bookstop.ownerName, bookstop.ownerId);
@@ -2159,55 +2158,14 @@ vdvw.c.VisualizeTraceForBook = function(bookId, selectedUserId){
             line = xpd.viz.drawLine('#333', markerFrom.getPosition(), markerTo.getPosition(), true, 1.5);
             breadcrumb = jQuery('#bookTraceLast').render(bookstop);
         }
-        
         markerFrom = markerTo;
         var bc = xpd.viz.drawBreadCrumb(breadcrumb, type, id);
-        
         if(typeof(selectedUserId) != "undefined"){
             if(id == selectedUserId){
                 vdvw.c.drawTeaserForIcon(bookstop.ownerName, bookstop.Ma, bookstop.Na, markerTo, bookstop.id, isLastBookStop);
             }
         }
-        
-        continue; // TODO - remove
-        // TODO - (re)move
-        // case clicked book, show reviews and comments
-        /*
-        if(bookId == bookstop.id){
-            var reviews = xpd.Mappers.getReviewsForBookOwner(bookstop.ownerId);
-            // draw the reviews (all reviews for one book stop have the same color)
-            //var rndColor = colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-            for( var it2 = 0; it2<reviews.length; ++it2){
-                var review = reviews[it2];
-                //var refDataRev = {type: review.type, id: review.id, ownerId: review.ownerId};
-                var revMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(review), $H(refDataRev));
-                var line = xpd.viz.drawLine('#c00', markerTo.getPosition(), revMarker.getPosition(), false, 1);
-                if(iter == bookstops.length -1){
-                    var bc = xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCurrentBookReview(review),$H(refDataRev));
-                    var ownerSpan = bc.find(".reviewOwnerName");
-                    ownerSpan.data('refData', $H({type:xpd.BookPrint.EntityName(), id:review.reviewedBook.ownerId}));
-                    ownerSpan.click(vdvw.c.onClick);
-                    var headSpan = bc.find(".reviewHead");
-                    headSpan.data('refData', $H({type:xpd.Review.EntityName(),id:review.id}));
-                    headSpan.click(vdvw.c.onClick);
-                }
-            }
-            // if our hero user also commented on others, we are now going to show that, too
-            var comments = xpd.Mappers.getCommentsForUser(bookstop.ownerId);
-            var cmColor = '#677D91';
-            //colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-            comments.each(function(comment){
-                //var cmData = {ownerId:bookstop.ownerId, id:comment.id, type:xpd.Comment.EntityName()};
-                var cmMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(comment), $H(cmData));
-                line = xpd.viz.drawLine(cmColor, markerTo.getPosition(), cmMarker.getPosition(), false, 1);
-                xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCommentByUser(comment),$H(cmData));
-            });
-        }*/
-        
     }
-    
-        
-    
     return returnMarker;
 }
 vdvw.c.VisualizeUserOnTheMap = function(userId){
@@ -2240,236 +2198,23 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
     var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, review.mappedComments);
     reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
     reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
+    xpd.viz.contentpane.selectComment(null, review.id);
 }
-
-
 vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
-    alert("comment " + commentId);
-    return;
-    //console.log('VisualizeConnectionsForCommentId');
-    // a comment basically connects two users
-    // it has following parameters
-    // 1) connection to owner of comment (represented with user icon)
-    // 2) connection to the commented entity (review)
-    // 3) the commented entity should be connected to another user
-    // 4) other comments on the same review should also be visualised
+    xpd.flush.clearMap();
     var mappedComment = xpd.Mappers.getMappedCommentForComment(xpd.db.table(xpd.Comment.EntityName()).select(commentId));
-	/**
-	 * e.g. mappedComment
-	 *
-	{
-	   "ownerId":"8",
-	   "ownerName":"bert",
-	   "ownerMa":"52.1561113",
-	   "ownerNa":"52.1561113",
-	   "hTime":"28-5-2012 21:31",
-	   "head":"sweet",
-	   "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
-	   "commentedEntityType":"review",
-	   "commentedEntityId":"1",
-	   "commentedEntityHead":"wang pang",
-	   "type":"comment",
-	   "id":"6",
-	   "timestamp":"1338233492",
-	   "Ma":"32.3182314",
-	   "Na":"-86.90229799999997"
-	}
-	 */
-    var commented = (mappedComment.commentedEntityType == xpd.Review.EntityName()) ? xpd.Review.EntityName() : null;
-	commented = xpd.Mappers.getMappedReviewForReview(xpd.db.table(commented).select(mappedComment.commentedEntityId));
-    if(!(commented instanceof xpd.Mapped.MappedReview)){
-        return;
-    }
-    /**
-     * e.g. commented (type mappedreview)
-     * 
-    {
-       "ownerId":"5",
-       "ownerName":"kangaroo",
-       "hTime":"19-2-2012 2:23",
-       "head":"wang pang",
-       "content":"chen chun ni haw",
-       "type":"review",
-       "id":"1",
-       "timestamp":"1329614621",
-       "Ma":"22.396428",
-       "Na":"114.10949700000003",
-	   "review":{
-          "time":"1329614621",
-          "head":"wang pang",
-          "content":"chen chun ni haw",
-          "ownerId":"5",
-          "type":"review",
-          "id":"1",
-          "ownerName":"kangaroo"
-       },
-       "reviewedBook":{
-          "ownerId":"5",
-          "ownerName":"kangaroo",
-          "hTime":"21-7-2012 8:41",
-          "hId":"4",
-          "type":"book",
-          "id":"3",
-          "timestamp":1342852862,
-          "Ma":"-35.2819998",
-          "Na":"149.12868430000003"
-       },
-       "ownerLocation":{
-          "Ma":"-35.2819998",
-          "Na":"149.12868430000003",
-          "type":"location",
-          "id":"5",
-          "ownerName":"kangaroo"
-       },
-       "reviewLocation":{
-          "Ma":"22.396428",
-          "Na":"114.10949700000003",
-          "type":"location",
-          "id":"6"
-       },
-       "mappedComments":[
-          {
-             "ownerId":"5",
-             "ownerName":"kangaroo",
-             "ownerMa":"-35.2819998",
-             "ownerNa":"149.12868430000003",
-             "hTime":"19-2-2012 3:1",
-             "head":"lekkerrr",
-             "content":"jaja",
-             "commentedEntityType":"review",
-             "commentedEntityId":"1",
-             "commentedEntityHead":"wang pang",
-             "type":"comment",
-             "id":"1",
-             "timestamp":"1329616909",
-             "Ma":"52.3702157",
-             "Na":"4.895167899999933"
-          },
-          {
-             "ownerId":"4",
-             "ownerName":"afrika",
-             "ownerMa":"-1.2920659",
-             "ownerNa":"36.82194619999996",
-             "hTime":"19-2-2012 3:6",
-             "head":"london",
-             "content":"new york",
-             "commentedEntityType":"review",
-             "commentedEntityId":"1",
-             "commentedEntityHead":"wang pang",
-             "type":"comment",
-             "id":"3",
-             "timestamp":"1329617193",
-             "Ma":"48.856614",
-             "Na":"2.3522219000000177"
-          },
-          {
-             "ownerId":"8",
-             "ownerName":"bert",
-             "ownerMa":"52.1561113",
-             "ownerNa":"52.1561113",
-             "hTime":"28-5-2012 21:31",
-             "head":"sweet",
-             "content":"<p>\n\t<strong>homo alabah ma</strong></p>\n<p>\n\t<strong><img alt=\"\" src=\"http://localhost/urbt120523/useruploads/images/ppm.jpg\" style=\"width: 290px; height: 398px; \" /></strong></p>\n",
-             "commentedEntityType":"review",
-             "commentedEntityId":"1",
-             "commentedEntityHead":"wang pang",
-             "type":"comment",
-             "id":"6",
-             "timestamp":"1338233492",
-             "Ma":"32.3182314",
-             "Na":"-86.90229799999997"
-          }
-       ]
-    }
-    */
-    //var commentRefData = {ownerId:mappedComment.ownerId, id:mappedComment.id, type:xpd.Comment.EntityName()};
-	//
-	//
-	// visualize on the map
-	//
-	//
-	
-	// retrieve color codes
-	var colors = vdvw.v.Const.getColorsArray();
-    var toOwnerOfCommentColor = '#333';//colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-    var toCommentedEntityColorAlsoToOtherUser = '#333';//colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];
-    var otherCommentsOnTheSameReviewColor = '#333';//colors.splice((Math.floor(staticRand.rand() * (colors.length)) + 0), 1)[0];  
-	//
-	//
-	// visualize in breadcrumb
-	//
-	//
-    xpd.viz.drawBreadCrumb(xpd.viz.breadcrumb.factorForCommentByUser(mappedComment),$H(commentRefData));
-    //
-	//
-	// visualize the comment on the map
-	//
-	//
-	var commentMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForComment(mappedComment), $H(commentRefData));
-    //
-	//
-	// visualize the owner of the commented review on the map
-	//
-	//
-	var bookStopOfCommenter = xpd.Mappers.getBookStopForUserId(mappedComment.ownerId);
-    // is de bookstop aka reviewer die de comment geplaatst heeft dezelfde als degene die de review plaatste?
-    var commenterAndReviewerAreTheSame = bookStopOfCommenter.id == commented.ownerId;
-    //var commentedEntityRefData = {type: commented.type, id: commented.id, ownerId: commented.ownerId};
-    var commentedEntityMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForReview(commented), $H(commentedEntityRefData));
-    var commentToCommentedEntityLine = xpd.viz.drawLine(toCommentedEntityColorAlsoToOtherUser, commentMarker.getPosition(), commentedEntityMarker.getPosition(), false, 1);
-    var bookStopOfReviewer = xpd.Mappers.getBookStopForUserId(commented.ownerId);
-    //var reviewOwnerRefData = {type: bookStopOfReviewer.type, id: bookStopOfReviewer.id, ownerId: bookStopOfReviewer.ownerId};
-    var currentLocationOfThisBook = xpd.Mappers.getBookAtCurrentLocationForId(bookStopOfReviewer.id)[0];
-    if(currentLocationOfThisBook.ownerId == bookStopOfReviewer.ownerId){
-        // wit bolletje
-        var reviewerMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUserWhite(bookStopOfReviewer), $H(reviewOwnerRefData));
-    }else{
-        //zwart mannetje
-        var reviewerMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookStopOfReviewer), $H(reviewOwnerRefData));
-        xpd.SelectedBook = bookStopOfReviewer.id;
-    }
-    var reviewToReviewerLine = xpd.viz.drawLine(toCommentedEntityColorAlsoToOtherUser, reviewerMarker.getPosition(), commentedEntityMarker.getPosition(), false, 1);
-    //
-	//
-	// visualize the commenter
-	//
-	//
-    //var commentingUserRefData = {type: bookStopOfCommenter.type, id: bookStopOfCommenter.id, ownerId: bookStopOfCommenter.ownerId};
-    var commentingUserMarker = null;
-    if(commenterAndReviewerAreTheSame){
-        // kunnen we het lijntje naar diegene trekken
-        commentingUserMarker = reviewerMarker;
-    }else{
-        // icoontje maken voor de schrijver van de comment
-        var currentLocationOfCommentingUserBook = xpd.Mappers.getBookAtCurrentLocationForId(bookStopOfCommenter.id)[0];
-        // dit moet een zwart bolletje zijn als ie nu het boek heeft
-        // en anders een mannetje
-        if(currentLocationOfCommentingUserBook.ownerId == bookStopOfCommenter.ownerId){
-            commentingUserMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForBookWithUser(bookStopOfCommenter), $H(commentingUserRefData));
-        }else{
-            commentingUserMarker = xpd.viz.drawIcon(xpd.viz.icon.factorForUser(bookStopOfCommenter), $H(commentingUserRefData));
-        }
-    }
-    var commentingUserToCommentLine = xpd.viz.drawLine(toOwnerOfCommentColor, commentMarker.getPosition(), commentingUserMarker.getPosition(), false, 1);
-	//
-	//
-	// visualize in content pane
-	//
-	//
-	//var commentDiv = xpd.viz.contentpane.factorForComment(mappedComment);
-    var factoredReview = xpd.viz.contentpane.factorForReview(commented);
-	var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview,$H(commentedEntityRefData));
-	var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, commented.mappedComments);
-	var commentedHeads = JQ_reviewInContentPane.children().find(".commentsContainer").children().find(".commentedHead");
-	commentedHeads.each(function(val){
-		jQuery(val).data('refData', $H(commentedEntityRefData));
-		jQuery(val).click(vdvw.c.onClick);
-	});
-	xpd.viz.contentpane.selectComment(mappedComment.id, commented.id);
+    var review = xpd.Mappers.getReviewForId(mappedComment.commentedEntityId);
+    var mappedReview = xpd.Mappers.getMappedReviewForReview(review);
+    var commentMarker = vdvw.c.VisualizeComment(mappedComment, true);
+    var commentedReviewMarker = vdvw.c.VisualizeReview(mappedReview,true);
+    xpd.viz.drawLine('#888', commentMarker.getPosition(), commentedReviewMarker.getPosition(), false, 1);
+    var factoredReview = xpd.viz.contentpane.factorForReview(mappedReview);
+    var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview);
+    var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, mappedReview.mappedComments);
+    reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
+    reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
+    xpd.viz.contentpane.selectComment(mappedComment.id, mappedReview.id);
 }
-
-
-
 vdvw.c.drawTeaserForIcon = function(ownerName, Ma, Na, targetMarker, bookId, isCurrentOwner){
     var defaultLocationString = "location: " + Ma + "," + Na;
     var geocodedLocationString = "";
@@ -2546,62 +2291,45 @@ xpd.viz.contentpane.addCommentsToReview = function(jq_review, mappedComments){
 xpd.viz.contentpane.factorForComment = function (bookWithUser) { 
     return jQuery('#commentExpanded').render(bookWithUser);
 }
-xpd.viz.contentpane.selectComment = function(mappedCommentId, reviewIdOption){
-	var JQ_selectedComment = null;
-	var JQ_selectedReview = null;
-	var heightCount = 0;
-	if(reviewIdOption == undefined){
-		throw "xpd.viz.contentpane.selectComment reviewIdOption == undefined is not implemented";
-	}else{
-		var JQ_contentpane = jQuery("#contentpane");
-		var contentPaneChildren = JQ_contentpane.children();
-		var iter = 0;
-		while(iter < contentPaneChildren.length){
-			var reviewDiv = contentPaneChildren[iter];
-			var JQ_reviewDiv = jQuery(reviewDiv);
-			heightCount += JQ_reviewDiv.outerHeight();
-			if(JQ_reviewDiv.data('refData').toObject().id == reviewIdOption){
-				JQ_selectedReview = JQ_reviewDiv;
-				heightCount -= JQ_selectedReview.find(".commentsContainer").outerHeight();
-				break;
-			}
-			iter++;
-		}
-		iter = 0;
-		var selectedReviewCommentsContainerChildren = JQ_selectedReview.find(".commentsContainer").children();
-		while(iter<selectedReviewCommentsContainerChildren.length){
-			var commentDiv = selectedReviewCommentsContainerChildren[iter];
-			var JQ_commentDiv = jQuery(commentDiv)
-			if(JQ_commentDiv.data('refData').toObject().id == mappedCommentId){
-				JQ_selectedComment = JQ_commentDiv;
-				break;
-			}else{
-				heightCount += JQ_commentDiv.outerHeight();
-			}
-			iter++;
-		}
-	}
-	setTimeout(function(){
-		var pane = jQuery('#contentpane-wrapper');
-		var api = pane.data('jsp');
-		api.scrollToY(heightCount+'');
-	},3000);
-	// bewerken van de visuele eigenschappen in de zin van "geselecteerd"
-	/*
-	hergebruik
-	
-	*/
+xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
+    var JQ_selectedComment = null;
+    var JQ_selectedReview = null;
+    var heightCount = 0;
+    var JQ_contentpane = jQuery("#contentpane");
+    var contentPaneChildren = JQ_contentpane.children();
+    var iter = 0;
+    while(iter < contentPaneChildren.length){
+        var reviewDiv = contentPaneChildren[iter];
+        var JQ_reviewDiv = jQuery(reviewDiv);
+        heightCount += JQ_reviewDiv.outerHeight();
+        if(vdvw.c.identify(JQ_reviewDiv.attr("id")).id == reviewId){
+            JQ_selectedReview = JQ_reviewDiv;
+            heightCount -= JQ_selectedReview.find(".commentsContainer").outerHeight();
+            break;
+        }
+        iter++;
+    }
+    if(null != commentIdNullable){
+        iter = 0;
+        var selectedReviewCommentsContainerChildren = JQ_selectedReview.find(".commentsContainer").children();
+        while(iter<selectedReviewCommentsContainerChildren.length){
+            var commentDiv = selectedReviewCommentsContainerChildren[iter];
+            var JQ_commentDiv = jQuery(commentDiv)
+            if(vdvw.c.identify(JQ_commentDiv.attr("id")).id == commentIdNullable){
+                    JQ_selectedComment = JQ_commentDiv;
+                    break;
+            }else{
+                    heightCount += JQ_commentDiv.outerHeight();
+            }
+            iter++;
+        }
+    }
+    setTimeout(function(){
+            var pane = jQuery('#contentpane-wrapper');
+            var api = pane.data('jsp');
+            api.scrollToY(heightCount+'');
+    },3000);
 }
-/**
-jQuery('#bookWithUser').render(bookWithUser);
-
-
-
-
-
-jQuery('#userFocusOnBookstop').render(bookstop);
-jQuery('#commentByUser').render(comment);
- */
 xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
     return new MarkerWithLabel({
         position: new google.maps.LatLng( Ma, Na ),
@@ -2803,40 +2531,36 @@ xpd.viz.drawBreadCrumb = function(bcDiv){
     result.find(".fcf-click").click(vdvw.c.onClick);
 }
 xpd.viz.drawContentPane = function(reviewDivContainingComments){
-    // heb ik hem al, zo ja moet ik hem WEL updaten maar wel op dezelfde plek houden
-	// heb ik hem nog niet, bovenaan erbij
-	// expand the content pane
-	if(!(xpd.viewState.toggleContentPane)){
-            xpd.viewState.toggleContentPane = true;
-            jQuery('#contentpane-container').animate({
+    if(!(xpd.viewState.toggleContentPane)){
+        xpd.viewState.toggleContentPane = true;
+        jQuery('#contentpane-container').animate({
 
             right: '0'
-            }, 
-            'fast', 
-            function() {
+        }, 
+        'fast', 
+        function() {
 
             });
     }
     var contentPane = jQuery("#contentpane");
-	var replaced = false;
-	var JQ_reviewDiv = jQuery(reviewDivContainingComments);
-	contentPane.children().each(function(index,reviewElement){
-		/*if(jQuery(reviewElement).data('refData').toObject().id == refDataObj.id){
-			jQuery(reviewElement).replaceWith(JQ_reviewDiv);
-			replaced = true;
-		}*/
-	});
-	if(!replaced){
-		contentPane.prepend(JQ_reviewDiv);
-	}
-	JQ_reviewDiv = jQuery(contentPane).find(JQ_reviewDiv);
-	//JQ_reviewDiv.data('refData',refData);
-
+    var replaced = false;
+    var JQ_reviewDiv = jQuery(reviewDivContainingComments);
+    contentPane.children().each(function(index,reviewElement){
+        var existingId = vdvw.c.identify(jQuery(reviewElement).attr("id")).id;
+        var candidateId = vdvw.c.identify(JQ_reviewDiv.attr("id")).id;
+        if(existingId == candidateId){
+            jQuery(reviewElement).replaceWith(JQ_reviewDiv);
+            replaced = true;
+        }
+    });
+    if(!replaced){
+        contentPane.prepend(JQ_reviewDiv);
+    }
+    JQ_reviewDiv = jQuery(contentPane).find(JQ_reviewDiv);
     if(contentPane.children().length > vdvw.v.Const.MAX_ELEMENTS_IN_CONTENTPANE()){
         contentPane.children().last().remove();
     }
-	// retourneer het element wat we vervangen danwel erin gevoegd hebben
-	return JQ_reviewDiv;
+    return JQ_reviewDiv;
 }
 
 /**
@@ -2878,8 +2602,3 @@ xpd.flush.addTeaser = function(teaser){
 */
 xpd.db = null;
 xpd.viewState = new vdvw.v.ViewStateObject();
-xpd.argsToObject = function(fn){
-    var args = fn.arguments;
-    var argNames = fn.argumentNames();
-    
-}

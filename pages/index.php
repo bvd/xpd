@@ -108,7 +108,7 @@ body {margin-top:0;}
     <!-- content pane elements -->
     <!-- content pane elements -->
     <script id="reviewExpanded" type="text/x-jquery-tmpl">
-        <div class='reviewExp'>
+        <div class='reviewExp' id="fcf-{{=type}}-{{=id}}">
             <div>
                 <span class="reviewHead">
                     <span class="pane-icon">
@@ -131,7 +131,7 @@ body {margin-top:0;}
         </div>
     </script>
     <script id="commentExpanded" type="text/x-jquery-tmpl">
-        <div class='commentExp'>
+        <div class='commentExp' id="fcf-{{=type}}-{{=id}}">
             <div>
                 <span class="commentHead">
                     <span class="pane-icon">
