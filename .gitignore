@@ -6,3 +6,5 @@
 /js/ext/ckeditor/
 # configuration details
 /conf/
+# archive of non versioned files
+/expodium_pack/
