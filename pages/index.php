@@ -450,7 +450,9 @@ body {margin-top:0;}
         </div>
     </script>
 
-    <!-- end ernstcommit2 -->
+    <script id="loginNameTPL" type="text/x-jquery-tmpl">
+        <span>logged in as {{=name}}</span>
+    </script>
 
 
 

@@ -214,9 +214,12 @@ drp.test.loginDialog = function(){
                 // add logout btn
                 jQuery("#logout-link").show();
                 var userName = rsp.login.result.userScreenName;
+                var uid = rsp.login.result.userId;
+                vdvw.m.Session.setUid(uid);
                 //console.log(userName);
-                jQuery("#login-name").append(userName);
-                jQuery("#login-name").show();           
+                jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:userName}));
+                jQuery("#login-name").show(); 
+                vdvw.c.click(xpd.User.EntityName(),rsp.login.result.userId);
             },
             function(errorMessage, errorCode){
                 var hMess = null;
@@ -297,6 +300,7 @@ drp.test.createLogoutDialog = function(){
                 comm:[drp.tr.comm.logout()]
             },
             function(rsp){
+                vdvw.m.Session.setUid("-1");
                 jQuery(dl).dialog('close');
                 jQuery("#logout-link").hide();
                 jQuery("#login-link").show();
@@ -519,11 +523,12 @@ drp.test.createSubscriptionDialog = function(token){
                         function(rsp){
                             if(rsp.submitUser.result){
                                 jQuery(dl).dialog('close');
+                                vdvw.m.Session.setUid(rsp.submitUser.result);
                                 drp.test.registerSuccessDialog(rsp.submitUser.result);
                                 jQuery("#login-link").hide();
                                 jQuery("#now-what").hide();
                                 jQuery("#logout-link").show();
-                                jQuery("#login-name").append(user.loginName);
+                                jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:user.screenName}));
                                 jQuery("#login-name").show();
                             }
                         }
@@ -971,11 +976,13 @@ drp.test.geocodeCommentOrReviewLocation = function(address, string, comment, for
                 text = 'Oops! Something went wrong, please try again.';
             }
             jQuery( '#drpPlacePickerText' ).html( text );
-            myMa = drp.test.geo.extractMA(results[0]);
-            myNa = drp.test.geo.extractNA(results[0]);
-            //console.log(myMa,myNa);
-            jQuery("." + formName + " #locMa").val(myMa);
-            jQuery("." + formName + " #locNa").val(myNa);
+            if(results.length > 0){
+                myMa = drp.test.geo.extractMA(results[0]);
+                myNa = drp.test.geo.extractNA(results[0]);
+                //console.log(myMa,myNa);
+                jQuery("." + formName + " #locMa").val(myMa);
+                jQuery("." + formName + " #locNa").val(myNa);
+            }
         });
     } else {
         
@@ -1042,7 +1049,7 @@ drp.createDialog = function(templateString){
     // and set the z index to resolve a bug see
     // http://forum.jquery.com/topic/can-t-edit-fields-of-ckeditor-in-jquery-ui-modal-dialog
     opts.zIndex = -1;
-    opts.draggable = false;
+    opts.draggable = true;
     // create the dialog
     var dl = templateObj.dialog(opts);
     // if the dialog is too high for the window, shorten its outer element

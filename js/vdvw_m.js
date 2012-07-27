@@ -90,6 +90,11 @@ vdvw.m.removeSpaces = function(str){
         str = str.substr(0,str.length-1);
     return str;
 }
+vdvw.m.Session = {};
+vdvw.m.Session.uid = "-1";
+vdvw.m.Session.setUid = function(uid){
+    vdvw.m.Session.uid = uid;
+}
 vdvw.m.Table = Class.create({
     initialize: function(incremental){
         this.records = {};
@@ -1789,6 +1794,9 @@ vdvw.c.identify = function(idString){
     var idSplit = idString.split("-");
     return {type:idSplit[1],id:idSplit[2]};
 }
+vdvw.c.click = function(type,id){
+    vdvw.c.VisualizeConnections(type,id);
+}
 vdvw.c.onClick = function(e){
     var type = null;
     var id = null;
@@ -1964,23 +1972,20 @@ vdvw.c.dataRefresh = function(type,id){
     });
 }
 vdvw.c.removeFromContentPane = function(type,id){
-    jQuery("#contentpane").children().each(function(index){
-        var d = jQuery(this).data('refData').toObject();
-        if(d.id == id && d.type == type){
-            this.remove();
-        }
-    });
+    var JQ_elementToBeRemoved = jQuery("#contentpane #fcf-" + type + "-" + id).remove();
 }
 vdvw.c.whoIsLoggedIn = function(){
     var cmd = drp.tr.comm.checkUser();
     drp.postTR({id:"checkUser",comm:[cmd]}, function(d){
         if(d.checkUser.result.hasOwnProperty("id")){
             if(d.checkUser.result.id > 0){
+                vdvw.m.Session.setUid(d.checkUser.result.id);
                 jQuery("#login-link").hide();
                 jQuery("#logout-link").show();
                 jQuery("#now-what").hide();
-                jQuery("#login-name").append(d.checkUser.result.screenName);
+                jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:d.checkUser.result.screenName}));
                 jQuery("#login-name").show();
+                vdvw.c.click(xpd.User.EntityName(), d.checkUser.result.id);
                 return;
             }
         }
@@ -2292,6 +2297,10 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
         heightCount += JQ_reviewDiv.outerHeight();
         if(vdvw.c.identify(JQ_reviewDiv.attr("id")).id == reviewId){
             JQ_selectedReview = JQ_reviewDiv;
+            if(null == commentIdNullable){
+                //todo change review background
+                JQ_selectedReview.css('background', '#888');
+            }
             heightCount -= JQ_reviewDiv.outerHeight();
             break;
         }
