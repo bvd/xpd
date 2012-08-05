@@ -1524,6 +1524,7 @@ vdvw.c.Startup = Class.create({
         else{
             vdvw.c.whoIsLoggedIn();
         }
+        vdvw.c.afterInit();
     },
     addPermanentEventListeners: function(){
         jQuery('#about-link').click(vdvw.c.onAboutClick);
@@ -2609,6 +2610,17 @@ xpd.flush.addLine = function(line){
 }
 xpd.flush.addTeaser = function(teaser){
     xpd.flush.lines.push(teaser);
+}
+/**
+ * SOME HOOKS INTO THE CONTROLLER CLASS
+ */
+vdvw.c.afterInit = function(){
+    var i = 0;
+    while(i < RunAfterInit.length){
+        var func = RunAfterInit[i];
+        func.func.apply(null,func.args);
+        i++;
+    }
 }
 /**
 * SINGLETONS
