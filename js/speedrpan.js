@@ -1,4 +1,4 @@
-if(drp == undefined) var drp = {};
+if(typeof drp == "undefined") var drp = {};
 drp.debugPost = false;
 drp.geocoder = function(){
     return new google.maps.Geocoder;
@@ -145,7 +145,7 @@ drp.postTR = function(transaction, callback, userErrorCallback){
             alert("no property '" + transaction.id + "' in response: " + dataString);
         }
         if(responseObject[transaction.id].hasOwnProperty("error")){
-            if(userErrorCallback == undefined || userErrorCallback == null){
+            if(typeof userErrorCallback == "undefined" || userErrorCallback == null){
                 alert(dataString);
             }else{
                 var code = responseObject[transaction.id].error.code;
@@ -813,6 +813,10 @@ drp.test.deleteDialog = function(obj){
         );
     });
 }
+drp.test.settingsDialog = function(mappedUser){
+    var dl = drp.createDialog(jQuery('#drpUserSettingsDialogTPL').render(mappedUser));
+    jQuery( "#tabs" ).tabs();
+}
 /**
  * DIALOG HELPERS
  */
@@ -822,7 +826,7 @@ drp.test.codeAddress = function(type) {
     jQuery(".errorText").hide();
     jQuery(".errorText2").hide();
     var address = document.getElementById("address").value;
-    if(marker != undefined) {
+    if(typeof marker != "undefined") {
         marker.setMap(null);
     }
     switch(type){
@@ -1045,7 +1049,7 @@ drp.createDialog = function(templateString){
     opts.close = drp.onRemoveOfDialog;
     if(dialogWidth != "") opts.width = dialogWidth;
     // set other dialog properties as wished
-    opts.modal = true;
+    opts.modal = false;
     // and set the z index to resolve a bug see
     // http://forum.jquery.com/topic/can-t-edit-fields-of-ckeditor-in-jquery-ui-modal-dialog
     opts.zIndex = -1;
@@ -1064,7 +1068,7 @@ drp.createDialog = function(templateString){
     var countUnIdentifiedEditors = 0;
     var editorIDS = [];
     jQuery.each(dl.find(".texteditor"), function(index,value){
-        if(value.id == "" || value.id == undefined) value.id = 'editor_unidentified_' + countUnIdentifiedEditors++;
+        if(value.id == "" || typeof value.id == "undefined") value.id = 'editor_unidentified_' + countUnIdentifiedEditors++;
         jQuery(value).ckeditor();
         editorIDS.push(value.id);
     });
@@ -1077,7 +1081,9 @@ drp.createDialog = function(templateString){
             if(parent.find(jqVal).length > 0){
                 jqVal.css("cursor","pointer");
                 jqVal.click(function(e){
-                    vdvw.c.openHelpForId(jqVal.attr('id'));
+                    var child = vdvw.c.openHelpForId(jqVal.attr('id'));
+                    jQuery('#faq-wrap').addClass("dialogChild");
+                    jQuery('#faq-wrap').css('zIndex', 9999);
                 });
             }
         });
@@ -1105,5 +1111,10 @@ drp.onRemoveOfDialog = function(){
     }
     jQuery(this).dialog('destroy').remove();
     jQuery(".drpDialog").remove();
-// is the about pane and/or the contentpane open? if yes, close them
+    if(jQuery("#faq-wrap").hasClass("dialogChild")){
+        if(xpd.viewState.toggleFAQ){
+            vdvw.c.onFAQClick();
+        }
+    }
+    jQuery(".dialogChild").removeClass("dialogChild");
 }

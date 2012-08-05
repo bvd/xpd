@@ -48,7 +48,7 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         $flt->comment = array("body","header","id","ownLocation","time","sharedReview","sharedUser");
         $flt->location = array("Ma","Na","time","id");
         $flt->review = array("body","header","id","ownLocation","time","sharedUser");
-        $flt->user = array("id","ownLocation","screenName","time");
+        $flt->user = array("id","ownLocation","screenName","time","loginName");
         
         // TODO dit is een handige algemeen bruikbare functie die in het framework moet
         foreach($ret as $type => $expBeans){

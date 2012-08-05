@@ -194,6 +194,7 @@ html { height: 100%; background: #fff; }
         font-size: 12px;
         font-style: italic;
         display: none;
+        cursor: pointer;
 }
 #cover {
 	position: absolute;  

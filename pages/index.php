@@ -449,9 +449,49 @@ body {margin-top:0;}
             </fieldset>
         </div>
     </script>
-
+    <script id="drpUserSettingsDialogTPL" type="text/x-jquery-tmpl">
+        <div id="tabsWrap" title="user settings" style="width: 1000px">
+            <div id="tabs">
+                <ul>
+                    <li><a href="#tabs-1">personal data</a></li>
+                    <li><a href="#tabs-2">reviews</a></li>
+                    <li><a href="#tabs-3">comments</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <table>
+                        <colgroup>
+                            <col width="200">
+                            <col width="200">
+                            <col width="400">
+                        </colgroup>
+                        <tr>
+                            <td><span>full name</span></td>
+                            <td><span>{{=userName}}</span></td>
+                            <td><span>This is how others see your name.</span></td>
+                        </tr>
+                        <tr>
+                            <td><span>login name</span></td>
+                            <td><span>{{=loginName}}</span></td>
+                            <td><span>Use it to log in.</span></td>
+                        </tr>
+                        <tr>
+                            <td><span>e-mail</span></td>
+                            <td><span><a>show email</a></span></td>
+                            <td><span>Use it when you forgot your password or username.</span></td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="tabs-2">
+                    <p>to do.</p>
+                </div>
+                <div id="tabs-3">
+                    <p>to do.</p>
+                </div>
+            </div>
+        </div>
+    </script>
     <script id="loginNameTPL" type="text/x-jquery-tmpl">
-        <span>logged in as {{=name}}</span>
+        <span>settings for {{=name}}</span>
     </script>
 
 

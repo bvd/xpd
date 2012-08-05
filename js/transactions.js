@@ -1,8 +1,8 @@
-if(drp == undefined) var drp = {};
-if(drp.tr == undefined) drp.tr = {};
-if(drp.tr.comm == undefined) drp.tr.comm = {};
-if(drp.tr.tr == undefined) drp.tr.tr = {};
-if(drp.tr.sys == undefined) drp.tr.sys = {};
+if(typeof drp == "undefined") var drp = {};
+if(typeof drp.tr == "undefined") drp.tr = {};
+if(typeof drp.tr.comm == "undefined") drp.tr.comm = {};
+if(typeof drp.tr.tr == "undefined") drp.tr.tr = {};
+if(typeof drp.tr.sys == "undefined") drp.tr.sys = {};
 /**
  * 
  * 

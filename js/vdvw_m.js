@@ -95,10 +95,13 @@ vdvw.m.Session.uid = "-1";
 vdvw.m.Session.setUid = function(uid){
     vdvw.m.Session.uid = uid;
 }
+vdvw.m.Session.getUid = function(){
+    return vdvw.m.Session.uid;
+}
 vdvw.m.Table = Class.create({
     initialize: function(incremental){
         this.records = {};
-        if(!(incremental == undefined)){
+        if(!(typeof incremental == "undefined")){
             this.incremental = incremental;
         }
     },
@@ -144,10 +147,10 @@ vdvw.m.DataBase = Class.create({
         this.entities = {};
     },
     createAssociationTable: function(associatedFrom, association, associatedTo, uniqueFrom, uniqueTo){
-        if(uniqueFrom == undefined){
+        if(typeof uniqueFrom == "undefined"){
             uniqueFrom = false;
         }
-        if(uniqueTo == undefined){
+        if(typeof uniqueTo == "undefined"){
             uniqueTo = false;
         }
         var tableName = associatedFrom + "_" + association + "_" + associatedTo;
@@ -171,10 +174,10 @@ vdvw.m.DataBase = Class.create({
         this.entities[entityName] = new vdvw.m.EntityTable(entityName);
     },
     hasEntityTable: function(entityTypeName){
-        return this.entities[entityTypeName] != undefined;
+        return typeof this.entities[entityTypeName] != "undefined";
     },
     hasRelationTable: function(entityTypeName){
-        return this.associations[entityTypeName] != undefined;
+        return typeof this.associations[entityTypeName] != "undefined";
     },
     insertEntity: function(entity){
         if(!(entity instanceof vdvw.m.Entity)){
@@ -184,7 +187,7 @@ vdvw.m.DataBase = Class.create({
         if(!(this.hasEntityTable(entity.type))){
             this.createEntityTable(entity.type);
         }
-        if(this.entities[entity.type].select(entity.id) != undefined){
+        if(typeof this.entities[entity.type].select(entity.id) != "undefined"){
             //console.log('! error inserting: already have a ' + entity.type + ' for id ' + entity.id);
             return;
         }
@@ -315,7 +318,7 @@ vdvw.m.DataBase.createQuery = function(query){
     // the select function
     ret.select = function(obj){
         var retarr = [];
-        if(filterConditionsIs == undefined){
+        if(typeof filterConditionsIs == "undefined"){
             return new Hash(obj).values();
         }
         if(filterConditionsIs.length == 0){
@@ -376,7 +379,7 @@ vdvw.m.DataBase.createQuery = function(query){
     }
     // the limit function
     ret.limit = function(arr){
-        if(limitint == undefined){
+        if(typeof limitint == "undefined"){
             return arr;
         }
         if(arr.length < limitint){
@@ -391,8 +394,9 @@ vdvw.m.DataBase.createQuery = function(query){
  * PRIMARY DATA -- GOVERNED BY DATABASE DESIGN CONCERNS
  */
 xpd.User = Class.create ( vdvw.m.Entity , {
-    initialize : function ($super, id, type, uName){
+    initialize : function ($super, id, type, uName, lName){
         this.uName = uName;
+        this.lName = lName;
         $super(id,type);
     }
 })
@@ -461,6 +465,14 @@ xpd.Mapped.StateObject = Class.create({
         this.Na = Na;
     }
 })
+xpd.Mapped.User = Class.create({
+    initialize: function(type, id, loginName, userName){
+        this.loginName = loginName;
+        this.userName = userName;
+        this.id = id;
+        this.type = type;
+    }
+})
 xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
     initialize: function($super, type, id, bookStateTimestamp, ownerMa, ownerNa, ownerId, ownerName){
         this.ownerId = ownerId;
@@ -484,6 +496,7 @@ xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
         this.commentedEntityType = commentedEntityType;
         this.commentedEntityId = commentedEntityId;
         this.commentedEntityHead = commentedEntityHead;
+        this.writable = vdvw.m.Session.getUid() == this.ownerId;
         $super(type, id, time, locMa, locNa);
     }
 })
@@ -500,6 +513,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
         this.head = review.head;
         this.content = review.content;
         this.ownerType = xpd.User.EntityName();
+        this.writable = vdvw.m.Session.getUid() == this.ownerId;
         $super(review.type, review.id, review.time, reviewLocation.Ma, reviewLocation.Na);
     }
 })
@@ -508,7 +522,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
  */
 xpd.Mappers = {};
 xpd.Mappers.getRelationOfBookStayWithUser = function(bookId, includeHistoryFalse){
-    if(includeHistoryFalse == undefined){
+    if(typeof includeHistoryFalse == "undefined"){
         includeHistoryFalse = false;
     }
     var getOwnerIdQ = vdvw.m.DataBase.createQuery('where from is ' + bookId);
@@ -525,13 +539,18 @@ xpd.Mappers.getRelationOfBookStayWithUser = function(bookId, includeHistoryFalse
     return hist;
     
 }
+xpd.Mappers.getUserForId = function(userId){
+    var getUserQ = vdvw.m.DataBase.createQuery('where id is ' + userId);
+    var u = xpd.db.table(xpd.User.EntityName()).select(getUserQ)[0];
+    return new xpd.Mapped.User(u.type,u.id,u.lName,u.uName);
+}
 xpd.Mappers.getReviewsForBookOwner = function(ownerId){
     var getRevsQ = 'where ownerId is ' + ownerId;
     getRevsQ = vdvw.m.DataBase.createQuery(getRevsQ);
     var tName = xpd.Review.EntityName();
     var revTable = xpd.db.table(tName);
     var ret = [];
-    if(revTable != undefined){
+    if(typeof revTable != "undefined"){
         var revs = revTable.select(getRevsQ);
         for(var iter = 0; iter < revs.length; ++iter){
             var primReview = revs[iter];
@@ -609,7 +628,7 @@ xpd.Mappers.getMappedCommentsForReviewId = function(reviewId){
     var q = vdvw.m.DataBase.createQuery(commentsQStr);
     var tbl = xpd.db.table(xpd.Comment.EntityName());
     var ret = [];
-    if(tbl != undefined){
+    if(typeof tbl != "undefined"){
         var comments = tbl.select(q); 
         comments.each(function(comment){
             // create mapped comment
@@ -624,7 +643,7 @@ xpd.Mappers.getMappedCommentForComment = function(comment){
     var time = comment.time;
     // does the comment itself have a location?
     var cloc = xpd.Mappers.getLocationForCommentId(comment.id);
-    if(cloc == null || cloc == undefined){
+    if(cloc == null || typeof cloc == "undefined"){
         cloc = xpd.Mappers.getLocationForUserId(comment.ownerId);
     }
     var locMa = cloc.Ma;
@@ -648,7 +667,7 @@ xpd.Mappers.getCommentsForUser = function (ownerId) {
     var ret = [];
     var getCommentsQ = vdvw.m.DataBase.createQuery('where ownerId is ' + ownerId);
     var comTab = xpd.db.table(xpd.Comment.EntityName());
-    if(comTab != undefined){
+    if(typeof comTab != "undefined"){
         var rawComments = comTab.select(getCommentsQ);
         rawComments.each(function(rawComment){
             ret.push(xpd.Mappers.getMappedCommentForComment(rawComment));
@@ -691,7 +710,7 @@ xpd.Mappers.getBookAtCurrentLocationForId = function(id){
 }
 xpd.Mappers.getBooksAtCurrentLocations = function(){
     var booksTB = xpd.db.table(xpd.BookPrint.EntityName());
-    if(undefined == booksTB){
+    if("undefined" == typeof booksTB){
         alert("no books in the database yet");
         return;
     }
@@ -702,7 +721,7 @@ xpd.Mappers.getBooksAtCurrentLocations = function(){
     allBooks.each(function(bookPrint){
         // get the owner of this book
         var bookIsWithUserRecord = xpd.Mappers.getRelationOfBookStayWithUser(bookPrint.id)[0];
-        if(bookIsWithUserRecord != undefined){
+        if(typeof bookIsWithUserRecord != "undefined"){
             var bookIsWithUserTime = bookIsWithUserRecord.__vdvwt;
             var ownerId = bookIsWithUserRecord.to;
             var getOwnerQ = vdvw.m.DataBase.createQuery('where id is ' + ownerId);
@@ -1503,10 +1522,8 @@ vdvw.c.Startup = Class.create({
             vdvw.c.VisualizeCurrentBooks();
         }
         else{
-            vdvw.c.dataRefresh();
+            vdvw.c.whoIsLoggedIn();
         }
-        vdvw.c.whoIsLoggedIn();
-        vdvw.c.afterInit();
     },
     addPermanentEventListeners: function(){
         jQuery('#about-link').click(vdvw.c.onAboutClick);
@@ -1519,6 +1536,7 @@ vdvw.c.Startup = Class.create({
         jQuery('#add-review-button').click(vdvw.c.onAddReviewClick);
         jQuery('#login-link').click(vdvw.c.onLoginClick);
         jQuery('#logout-link').click(vdvw.c.onLogoutClick);
+        jQuery('#login-name').click(vdvw.c.onLoginNameClick);
     },
     generateFakeData: function(){
         
@@ -1814,6 +1832,7 @@ vdvw.c.onClick = function(e){
         vdvw.c.VisualizeConnections(type,id);
     }
 }
+/*
 vdvw.c.onMouseOver = function(event){
     var representedData;
     if(event.hasOwnProperty('refData')){
@@ -1831,7 +1850,7 @@ vdvw.c.onMouseOver = function(event){
             iter++;
         }
     }
-}
+}*/
 vdvw.c.onAddCommentClick = function(id){
     drp.test.addCommentDialog(id,'review');
 }
@@ -1849,6 +1868,11 @@ vdvw.c.onLoginClick = function(event){
 }
 vdvw.c.onLogoutClick = function(event){
     drp.test.createLogoutDialog();
+}
+vdvw.c.onLoginNameClick = function(event){
+    var uid = vdvw.m.Session.getUid();
+    var mappedUser = xpd.Mappers.getUserForId(uid);
+    drp.test.settingsDialog(mappedUser);
 }
 vdvw.c.dataRefresh = function(type,id){
     drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
@@ -1886,7 +1910,7 @@ vdvw.c.dataRefresh = function(type,id){
                 i = 0;
                 while( i < uss.length ){
                     var us = uss[i];
-                    var usObj = new xpd.User(us.id, xpd.User.EntityName(), us.screenName);
+                    var usObj = new xpd.User(us.id, xpd.User.EntityName(), us.screenName, us.loginName);
                     xpd.db.insertEntity(usObj);
                     xpd.db.insertAssociation(usObj, xpd.Relations.has(), lcTab.select(us.ownLocation[0].id));
                     i++;
@@ -1949,7 +1973,7 @@ vdvw.c.dataRefresh = function(type,id){
                 i = 0;
                 while( i < cms.length ){
                     var cm = cms[i];
-                    if(undefined == cm.sharedReview){i++;continue;} // don't display comments of which the review has been deleted'
+                    if(!cm.sharedReview){i++;continue;} // don't display comments of which the review has been deleted'
 					var cmObj = new xpd.Comment( cm.id, xpd.Comment.EntityName(), cm.time, cm.header, cm.body, cm.sharedUser[0].id, xpd.Review.EntityName(), cm.sharedReview[0].id);
                     xpd.db.insertEntity(cmObj);
                     xpd.db.insertAssociation(cmObj, xpd.Relations.has(), lcTab.select(cm.ownLocation[0].id));
@@ -1957,14 +1981,13 @@ vdvw.c.dataRefresh = function(type,id){
                 }
             }
         }
-        if(!(undefined == type || undefined == id)){
-            if(type=="review")
+        if(!( !type || !id)){
+            if(type==xpd.Review.EntityName())
                 vdvw.c.VisualizeConnectionsForReviewId(id);
-            else if(type=="comment")
+            else if(type==xpd.Comment.EntityName())
                 vdvw.c.VisualizeConnectionsForCommentId(id);
-            else if(type=="user"){
-                var bookstop = xpd.Mappers.getBookStopForUserId(id);
-                vdvw.c.VisualizeTraceForBook(bookstop.id);
+            else if(type==xpd.User.EntityName()){
+                vdvw.c.click(xpd.User.EntityName(), id);
             }   
         }else{
             vdvw.c.VisualizeCurrentBooks();
@@ -1985,12 +2008,13 @@ vdvw.c.whoIsLoggedIn = function(){
                 jQuery("#now-what").hide();
                 jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:d.checkUser.result.screenName}));
                 jQuery("#login-name").show();
-                vdvw.c.click(xpd.User.EntityName(), d.checkUser.result.id);
+                vdvw.c.dataRefresh(xpd.User.EntityName(), d.checkUser.result.id);
                 return;
             }
         }
         jQuery("#login-link").show();
         jQuery("#logout-link").hide();
+        vdvw.c.dataRefresh();
     });               
 }
 vdvw.c.openHelpForId = function(id){
@@ -2007,19 +2031,7 @@ vdvw.c.openHelpForId = function(id){
     if(!(xpd.viewState.toggleFAQ)){
         vdvw.c.onFAQClick();
     }
-    //jQuery('#faq-text').accordion('activate',false); // first close all...
     jQuery('#faq-text').accordion('activate',searchIndexForId);
-}
-/**
- * SOME HOOKS INTO THE CONTROLLER CLASS
- */
-vdvw.c.afterInit = function(){
-    var i = 0;
-    while(i < RunAfterInit.length){
-        var func = RunAfterInit[i];
-        func.func.apply(null,func.args);
-        i++;
-    }
 }
 
 /**
@@ -2263,21 +2275,23 @@ xpd.viz.breadcrumb.fadeHistorically = function () {
     });
 }
 xpd.viz.contentpane.factorForReview = function (review) { 
-    return jQuery('#reviewExpanded').render(review);
+    var JQ_renderedReview = jQuery(jQuery('#reviewExpanded').render(review));
+    if(!review.writable){
+        JQ_renderedReview.find(".vdvw-delete-button").remove();
+    }
+    return JQ_renderedReview;
 }
 xpd.viz.contentpane.addCommentsToReview = function(jq_review, mappedComments){
     var JQ_reviewDiv = jq_review;
     var JQ_commentsContainer = JQ_reviewDiv.find(".commentsContainer");
     mappedComments.each(function(mappedComment){
-		var factoredComment = xpd.viz.contentpane.factorForComment(mappedComment);
-		JQ_commentsContainer.append(factoredComment);
-		var commentsContainerChildren = JQ_commentsContainer.children();
-		var JQ_addedComment = jQuery(commentsContainerChildren[commentsContainerChildren.length-1]);
-		var head = JQ_addedComment.find(".commentedHead");
-		var refDataHash = $H({type:mappedComment.type,id:mappedComment.id});
-		head.data('refData', refDataHash);
-		head.click(vdvw.c.onClick);
-		JQ_addedComment.data("refData",refDataHash);
+        var factoredComment = xpd.viz.contentpane.factorForComment(mappedComment);
+        JQ_commentsContainer.append(factoredComment);
+        var commentsContainerChildren = JQ_commentsContainer.children();
+        var JQ_addedComment = jQuery(commentsContainerChildren[commentsContainerChildren.length-1]);
+        if(!mappedComment.writable){
+            JQ_addedComment.find(".vdvw-delete-button").remove();
+        }
     });
     return JQ_reviewDiv;
 }
@@ -2414,9 +2428,9 @@ xpd.viz.drawIcon = function(icon, type, id){
         return function(){vdvw.c.onClick(icon);}
     })(icon));
     // add hover listener for connecting line
-    google.maps.event.addListener(icon, 'mouseover', (function(icon){
+    /*google.maps.event.addListener(icon, 'mouseover', (function(icon){
         return function(){vdvw.c.onMouseOver(icon);}
-    })(icon));
+    })(icon));*/
     icon.setMap(vdvw.v.Const.MAP());
     xpd.flush.addMarker(icon);
     icon.fcf_type = type;
