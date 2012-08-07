@@ -32,6 +32,7 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         $review = R::find("review");
         $user = R::find("user");
         
+        // todo verschillende sets afh van rol
         
         
         $ret->book = R::exportAll($book);

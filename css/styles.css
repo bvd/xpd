@@ -171,7 +171,7 @@ html { height: 100%; background: #fff; }
         font-size: 12px;
         cursor: pointer;
 }
-#login-link, #logout-link, #about-link {
+#login-link, #logout-link, #about-link, #cms-link {
         float: right;
 	color: white;
         padding: 0 15px 0 15px;
@@ -180,10 +180,10 @@ html { height: 100%; background: #fff; }
 	cursor: pointer;
 	z-index: 3;
 }
-#logout-link {
+#logout-link, #cms-link {
         display:none;
 }
-#login-link:hover, #logout-link:hover{
+#login-link:hover, #logout-link:hover, #cms-link:hover{
         background: #fff;
         color: #333;
 }

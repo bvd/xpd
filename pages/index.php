@@ -148,6 +148,19 @@ body {margin-top:0;}
             </div>
         </div>
     </script>
+    <!-- panel templates -->	
+    <!-- panel templates -->	
+    <!-- panel templates -->
+    <script id="cmsPanelTPL" type="text/x-jquery-tmpl">
+        <div title="content management system"  id="cms-panel" class="drpPanel" style="width: 1000px">
+            <div id="entities" style="height: 1000px;"></div>
+        </div>
+    </script>
+    <script id="cmsEntity" type="text/x-jquery-tmpl">
+        <div title="content management system" class="cmsEntity">
+            <span class="getAll" id="{{=name}}">{{=name}}</span>
+        </div>
+    </script>
     <!-- dialog templates -->	
     <!-- dialog templates -->	
     <!-- dialog templates -->	

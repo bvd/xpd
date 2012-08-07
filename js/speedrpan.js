@@ -218,7 +218,21 @@ drp.test.loginDialog = function(){
                 vdvw.m.Session.setUid(uid);
                 //console.log(userName);
                 jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:userName}));
-                jQuery("#login-name").show(); 
+                jQuery("#login-name").show();
+                var showCMSButton = false;
+                $H(rsp.login.result.userRoles).each(function(pair){
+                    if(pair.value == "moderator" || pair.value == "sysadmin"){
+                        showCMSButton = true;
+                        throw $break;
+                    }
+                });
+                if(showCMSButton){
+                    vdvw.c.InitCmsPanel();
+                    jQuery("#cms-link").show();
+                }else{
+                    vdvw.c.DestroyCmsPanel();
+                    jQuery("#cms-link").hide();
+                }
                 vdvw.c.click(xpd.User.EntityName(),rsp.login.result.userId);
             },
             function(errorMessage, errorCode){
@@ -305,9 +319,13 @@ drp.test.createLogoutDialog = function(){
                 jQuery("#logout-link").hide();
                 jQuery("#login-link").show();
                 jQuery("#login-name").hide();
+                jQuery("#cms-link").hide();
             }
         );
     });
+}
+drp.test.cmsPanel = function(panelDiv){
+    var dl = drp.createPanel(panelDiv);
 }
 drp.test.createModeratorDialog = function(){
     var dl = drp.createDialog(jQuery('#drpAddModeratorTPL').render({}));
@@ -1040,13 +1058,22 @@ drp.test.removeTinyMCE = function () {
     tinyMCE.execCommand('mceRemoveControl', false, 'email_body');
 }
 drp.createDialog = function(templateString){
+    var opts = {};
+    opts.close = drp.onRemoveOfDialog;
+    return drp.displayDialogOrPanel(templateString, opts);
+}
+drp.createPanel = function(templateString){
+    var opts = {};
+    opts.close = drp.onRemoveOfPanel;
+    return drp.displayDialogOrPanel(templateString, opts);
+}
+drp.displayDialogOrPanel = function(templateString,opts){
     // render a jquery wrapped dom object from the template string
     var templateObj = jQuery(templateString);
     // apply the width from the top level dom element to the dialog optiosn
     var dialogWidth = templateObj.css("width");
     if(dialogWidth == "0px") dialogWidth = "";
-    var opts = {};
-    opts.close = drp.onRemoveOfDialog;
+    
     if(dialogWidth != "") opts.width = dialogWidth;
     // set other dialog properties as wished
     opts.modal = false;
@@ -1096,6 +1123,7 @@ drp.createDialog = function(templateString){
     }
     return dl;
 }
+
 drp.trimDialogVertically = function(dl){
     // see if we need to lower the height of the dialog
     // as it could fall off the page and not have a scrollbar
@@ -1111,6 +1139,25 @@ drp.onRemoveOfDialog = function(){
     }
     jQuery(this).dialog('destroy').remove();
     jQuery(".drpDialog").remove();
+    if(jQuery("#faq-wrap").hasClass("dialogChild")){
+        if(xpd.viewState.toggleFAQ){
+            vdvw.c.onFAQClick();
+        }
+    }
+    jQuery(".dialogChild").removeClass("dialogChild");
+}
+drp.onRemoveOfPanel = function(){
+    var editorsRR = jQuery(this).data("editors");
+    if(null != editorsRR){
+        jQuery.each(editorsRR,function(index,value){
+            if(value.substring(0,1) == "#") value = value.substring(1);
+            if(null != CKEDITOR.instances[value]) CKEDITOR.instances[value].destroy();
+        });
+    }
+    var width = jQuery(this).dialog('option','width');
+    var panel = jQuery(this).dialog('destroy');
+    var appendedPanel = panel.appendTo(jQuery('body')).hide();
+    appendedPanel.css("width",width);
     if(jQuery("#faq-wrap").hasClass("dialogChild")){
         if(xpd.viewState.toggleFAQ){
             vdvw.c.onFAQClick();

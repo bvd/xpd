@@ -463,6 +463,10 @@ xpd.Mapped.StateObject = Class.create({
         this.Ma = Ma;
         // the location Na / long of the object in this state
         this.Na = Na;
+    },
+    getIds: function(){
+        var table = vdvw.m.DataBase.table(this.type);
+        return table.select();
     }
 })
 xpd.Mapped.User = Class.create({
@@ -470,7 +474,7 @@ xpd.Mapped.User = Class.create({
         this.loginName = loginName;
         this.userName = userName;
         this.id = id;
-        this.type = type;
+        this.type = xpd.User.EntityName();
     }
 })
 xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
@@ -480,6 +484,7 @@ xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
         this.hTime =  xpd.Mappers.convertToHumanReadableLocalTimeString(bookStateTimestamp);
         this.hId = (parseInt(id)+1)+'';
         this.ownerType = xpd.User.EntityName();
+        var type = xpd.User.EntityName();
         $super(type, id, bookStateTimestamp, ownerMa, ownerNa);
     }
 })
@@ -497,24 +502,47 @@ xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
         this.commentedEntityId = commentedEntityId;
         this.commentedEntityHead = commentedEntityHead;
         this.writable = vdvw.m.Session.getUid() == this.ownerId;
+        var type = xpd.Comment.EntityName();
         $super(type, id, time, locMa, locNa);
     }
 })
 xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
+    // TODO bad practice to create from another object?
     initialize: function($super, review, ownerLocation, reviewLocation, mappedComments, reviewedBook){
         this.review = review;
         this.reviewedBook = reviewedBook;
         this.ownerLocation = ownerLocation;
         this.reviewLocation = reviewLocation;
         this.mappedComments = mappedComments;
-        this.ownerId = review.ownerId;
-        this.ownerName = review.ownerName;
-        this.hTime = xpd.Mappers.convertToHumanReadableLocalTimeString(review.time);
-        this.head = review.head;
-        this.content = review.content;
+        var ownerId;
+        var ownerName;
+        var time;
+        var head;
+        var content;
+        var type = xpd.Review.EntityName();
+        var id;
+        var ma;
+        var na;
+        if(typeof(review) != "undefined"){
+            ownerId = review.ownerId;
+            ownerName = review.ownerName;
+            time = review.time;
+            content = review.content;
+            head = review.head;
+            id = review.id;
+        }
+        if(typeof(reviewLocation) != "undefined"){
+            ma = reviewLocation.Ma;
+            na = reviewLocation.Na;
+        }
+        this.ownerId = ownerId;
+        this.ownerName = ownerName;
+        this.hTime = xpd.Mappers.convertToHumanReadableLocalTimeString(time);
+        this.head = head;
+        this.content = content;
         this.ownerType = xpd.User.EntityName();
         this.writable = vdvw.m.Session.getUid() == this.ownerId;
-        $super(review.type, review.id, review.time, reviewLocation.Ma, reviewLocation.Na);
+        $super(type, id, time, ma, na);
     }
 })
 /**
@@ -570,9 +598,12 @@ xpd.Mappers.getBookStopForUserId = function (userId) {
     var hist_bookIsWithUserTable = xpd.db.table(tName);
     var hist = hist_bookIsWithUserTable.select(getBookIdQ);
     jQuery.merge(hist,current);
-    var primBook = xpd.db.table(xpd.BookPrint.EntityName()).select(hist[0].from);
-    var location = xpd.Mappers.getLocationForUserId(primUser.id);
-    return new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), hist[0].from, hist[0].__vdvwt, location.Ma, location.Na, primUser.id, primUser.uName);
+    if(hist.length){
+        var primBook = xpd.db.table(xpd.BookPrint.EntityName()).select(hist[0].from);
+        var location = xpd.Mappers.getLocationForUserId(primUser.id);
+        return new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), hist[0].from, hist[0].__vdvwt, location.Ma, location.Na, primUser.id, primUser.uName);
+    }
+    return null;
 }
 /**
  * returns array of xpd.Mapped.BookStop
@@ -766,6 +797,10 @@ vdvw.v.Const.BREADCRUMB_MIN_FONTSIZE = function(){
 };
 vdvw.v.Const.MAX_ELEMENTS_IN_BREADCRUMB = function(){return 5;};
 vdvw.v.Const.MAX_ELEMENTS_IN_CONTENTPANE = function(){return 20;};
+
+vdvw.v.Const.retrieveCmsPanel = function(){
+    return jQuery("#cms-panel");
+}
 
 vdvw.v.Const.Map = {};
 vdvw.v.Const.MAP = function(){return vdvw.v.Const.Map;};
@@ -1022,6 +1057,9 @@ vdvw.v.FLoginWrapper = function(){
      var abt = div.append(jQuery('<div/>',{
         id: 'about-link'
     }).append('about'));
+    var cms = div.append(jQuery('<div/>',{
+        id: 'cms-link'
+    }).append('cms'));
    
     return div;
 }
@@ -1538,6 +1576,7 @@ vdvw.c.Startup = Class.create({
         jQuery('#login-link').click(vdvw.c.onLoginClick);
         jQuery('#logout-link').click(vdvw.c.onLogoutClick);
         jQuery('#login-name').click(vdvw.c.onLoginNameClick);
+        jQuery('#cms-link').click(vdvw.c.onCmsClick);
     },
     generateFakeData: function(){
         
@@ -1875,6 +1914,9 @@ vdvw.c.onLoginNameClick = function(event){
     var mappedUser = xpd.Mappers.getUserForId(uid);
     drp.test.settingsDialog(mappedUser);
 }
+vdvw.c.onCmsClick=function(event){
+    drp.test.cmsPanel(vdvw.v.Const.retrieveCmsPanel());
+}
 vdvw.c.dataRefresh = function(type,id){
     drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
         xpd.flush.clearMap();
@@ -2009,6 +2051,20 @@ vdvw.c.whoIsLoggedIn = function(){
                 jQuery("#now-what").hide();
                 jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:d.checkUser.result.screenName}));
                 jQuery("#login-name").show();
+                var showCmsButton = false;
+                $H(d.checkUser.result.userRoles).each(function(pair){
+                    if(pair.value == "moderator" || pair.value == "sysadmin"){
+                        showCmsButton = true;
+                        throw $break;
+                    }
+                });
+                if(showCmsButton){
+                    vdvw.c.InitCmsPanel();
+                    jQuery("#cms-link").show();
+                }else{
+                    vdvw.c.DestroyCmsPanel();
+                    jQuery("#cms-link").hide();
+                }
                 vdvw.c.dataRefresh(xpd.User.EntityName(), d.checkUser.result.id);
                 return;
             }
@@ -2017,6 +2073,33 @@ vdvw.c.whoIsLoggedIn = function(){
         jQuery("#logout-link").hide();
         vdvw.c.dataRefresh();
     });               
+}
+vdvw.c.InitCmsPanel = function(){
+    
+    jQuery("#cmsPanel").remove();
+    var emptyPanel = jQuery("#cmsPanelTPL").render({});
+    var JQ_emptyPanel = jQuery(emptyPanel);
+    var panel = JQ_emptyPanel.appendTo(jQuery("body"));
+    
+    $H(xpd.Mapped).each(function(pair){
+        var instance = new pair.value();
+        if(instance.type){
+            var entity = jQuery("#cmsEntity").render({name:pair.key});
+            panel.find("#entities").append(entity);
+            $H(instance).each(function(pair){
+                var colName = pair.key;
+            });
+        }
+    });
+    jQuery(".getAll").click(vdvw.c.cmsClassNameClick);
+    jQuery(".getAll").css('cursor','pointer');
+}
+vdvw.c.DestroyCmsPanel = function(){
+    vdvw.c.InitCmsPanel();
+}
+vdvw.c.cmsClassNameClick = function(event){
+    var className = jQuery(event.target).text();
+    var ids = xpd.Mapped[className].getIds();
 }
 vdvw.c.openHelpForId = function(id){
     var searchIndexForId = -1;
@@ -2076,9 +2159,11 @@ vdvw.c.VisualizeConnections = function(type,id){
     }
     else if(type == xpd.User.EntityName()){
     	var bookstop = xpd.Mappers.getBookStopForUserId(id);
-        vdvw.c.VisualizeTraceForBook(bookstop.id, id);
-        vdvw.c.VisualizeActionsForUserId(id);
-        vdvw.c.ShowBookLocationsExcept(bookstop.id);
+        if(bookstop){
+            vdvw.c.VisualizeTraceForBook(bookstop.id, id);
+            vdvw.c.VisualizeActionsForUserId(id);
+            vdvw.c.ShowBookLocationsExcept(bookstop.id);
+        }
     }
     else{
         alert("cannot display type: " + type);
