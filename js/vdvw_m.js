@@ -394,15 +394,20 @@ vdvw.m.DataBase.createQuery = function(query){
  * PRIMARY DATA -- GOVERNED BY DATABASE DESIGN CONCERNS
  */
 xpd.User = Class.create ( vdvw.m.Entity , {
-    initialize : function ($super, id, type, uName, lName){
-        this.uName = uName;
-        this.lName = lName;
+    initialize : function ($super, id, type, screenName, loginName, email){
+        if(typeof(id) == "undefined") id = 0;
+        if(typeof(type == "undefined")) type = xpd.User.EntityName();
+        this.screenName = screenName;
+        this.loginName = loginName;
+        this.email = email;
         $super(id,type);
     }
 })
 xpd.User.EntityName = function(){return 'user';};
 xpd.Location = Class.create(vdvw.m.Entity ,{
    initialize: function($super, id, type, Ma, Na){
+       if(typeof(id) == "undefined") id = 0;
+       if(typeof(type == "undefined")) type = xpd.Location.EntityName();
        this.Ma = Ma;
        this.Na = Na;
        $super(id,type);
@@ -411,6 +416,8 @@ xpd.Location = Class.create(vdvw.m.Entity ,{
 xpd.Location.EntityName = function(){return 'location';};
 xpd.Review = Class.create(vdvw.m.Entity,{
     initialize: function($super, id, type, time, head, content, ownerId){
+        if(typeof(id) == "undefined") id = 0;
+        if(typeof(type == "undefined")) type = xpd.Review.EntityName();
         this.time = time;
         this.head = head;
         this.content = content;
@@ -421,6 +428,8 @@ xpd.Review = Class.create(vdvw.m.Entity,{
 xpd.Review.EntityName = function(){return 'review';};
 xpd.Comment = Class.create(xpd.Review,{
     initialize: function($super, id, type, time, head, content, ownerId, commentedEntityType, commentedId){
+        if(typeof(id) == "undefined") id = 0;
+        if(typeof(type == "undefined")) type = xpd.Comment.EntityName();
         this.commentedEntityType = commentedEntityType;
         this.commentedId = commentedId;
         $super(id,type,time,head,content,ownerId);
@@ -435,6 +444,26 @@ xpd.BookPrint = Class.create(vdvw.m.Entity, {
    }
 });
 xpd.BookPrint.EntityName = function() {return "book";};
+xpd.Question = Class.create(vdvw.m.Entity, {
+   initialize: function($super, id, entityName, question, answer){
+       if(typeof(id) == "undefined") id = 0;
+       if(typeof(entityName == "undefined")) entityName = xpd.Question.EntityName();
+       this.question = question;
+       this.answer = answer;
+       $super(id, entityName);
+   }
+});
+xpd.Question.EntityName = function() {return "question";};
+xpd.Tag = Class.create(vdvw.m.Entity, {
+   initialize: function($super, id, entityName, tag, description){
+       if(typeof(id) == "undefined") id = 0;
+       if(typeof(entityName == "undefined")) entityName = xpd.Tag.EntityName();
+       this.tag = tag;
+       this.description = description;
+       $super(id, entityName);
+   }
+});
+xpd.Tag.EntityName = function() {return "tag";};
 /**
  * DATA CONSTANTS
  */
@@ -573,7 +602,7 @@ xpd.Mappers.getRelationOfBookStayWithUser = function(bookId, includeHistoryFalse
 xpd.Mappers.getUserForId = function(userId){
     var getUserQ = vdvw.m.DataBase.createQuery('where id is ' + userId);
     var u = xpd.db.table(xpd.User.EntityName()).select(getUserQ)[0];
-    return new xpd.Mapped.User(u.type,u.id,u.lName,u.uName);
+    return new xpd.Mapped.User(u.type,u.id,u.loginName,u.screenName);
 }
 xpd.Mappers.getReviewsForBookOwner = function(ownerId){
     var getRevsQ = 'where ownerId is ' + ownerId;
@@ -604,7 +633,7 @@ xpd.Mappers.getBookStopForUserId = function (userId) {
     if(hist.length){
         var primBook = xpd.db.table(xpd.BookPrint.EntityName()).select(hist[0].from);
         var location = xpd.Mappers.getLocationForUserId(primUser.id);
-        return new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), hist[0].from, hist[0].__vdvwt, location.Ma, location.Na, primUser.id, primUser.uName);
+        return new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), hist[0].from, hist[0].__vdvwt, location.Ma, location.Na, primUser.id, primUser.screenName);
     }
     return null;
 }
@@ -619,7 +648,7 @@ xpd.Mappers.getTraceForBook = function(bookId){
         var getOwnerQ = vdvw.m.DataBase.createQuery('where id is ' + bookstop.to);
         var owner = xpd.db.table(xpd.User.EntityName()).select(getOwnerQ)[0];
         var location = xpd.Mappers.getLocationForUserId(owner.id);
-        var mpd = new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), bookId, bookstop.__vdvwt, location.Ma, location.Na, owner.id, owner.uName);
+        var mpd = new xpd.Mapped.BookStop(xpd.BookPrint.EntityName(), bookId, bookstop.__vdvwt, location.Ma, location.Na, owner.id, owner.screenName);
         ret.push(mpd);
     });
     return ret;
@@ -684,7 +713,7 @@ xpd.Mappers.getMappedCommentForComment = function(comment){
     var locNa = cloc.Na;
     var ownerId = comment.ownerId;
     var userTab = xpd.db.table(xpd.User.EntityName());
-    var ownerName = userTab.select(comment.ownerId).uName;
+    var ownerName = userTab.select(comment.ownerId).screenName;
     var userHasLocationTab = xpd.db.table(xpd.User.EntityName()+'_'+xpd.Relations.has()+'_'+xpd.Location.EntityName());
     var ownerLocationId = userHasLocationTab.select(vdvw.m.DataBase.createQuery('where from is '+comment.ownerId))[0];
     var ownerLocation = xpd.db.table(xpd.Location.EntityName()).select(ownerLocationId.to);
@@ -710,7 +739,7 @@ xpd.Mappers.getCommentsForUser = function (ownerId) {
     return ret;
 }
 xpd.Mappers.getMappedReviewForReview = function(review){
-    review.ownerName = xpd.db.table(xpd.User.EntityName()).select(review.ownerId).uName;
+    review.ownerName = xpd.db.table(xpd.User.EntityName()).select(review.ownerId).screenName;
     var ownerLocation = xpd.Mappers.getLocationForUserId(review.ownerId);
     var reviewLocation = xpd.Mappers.getLocationForReviewId(review.id);
     var mappedComments = xpd.Mappers.getMappedCommentsForReviewId(review.id);
@@ -737,7 +766,7 @@ xpd.Mappers.getBookAtCurrentLocationForId = function(id){
         var getLocationQ = vdvw.m.DataBase.createQuery('where id is ' + locationId);
         var location = xpd.db.table(xpd.Location.EntityName()).select(getLocationQ)[0];
         // create mapped object
-        var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
+        var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.screenName);
         ret.push(mpd);
     });
     return ret;
@@ -768,7 +797,7 @@ xpd.Mappers.getBooksAtCurrentLocations = function(){
             var getLocationQ = vdvw.m.DataBase.createQuery('where id is ' + locationId);
             var location = xpd.db.table(xpd.Location.EntityName()).select(getLocationQ)[0];
             // create mapped object
-            var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.uName);
+            var mpd = new xpd.Mapped.BookStop(bookPrint.type, bookPrint.id, bookIsWithUserTime, location.Ma, location.Na, owner.id, owner.screenName);
             ret.push(mpd);
         }
     });
@@ -1943,6 +1972,32 @@ vdvw.c.dataRefresh = function(type,id){
             }
         }
         
+        if(rs.hasOwnProperty('question')){
+            if(rs.question instanceof Array){
+                var qs = rs.question;
+                i = 0;
+                while (i < qs.length ){
+                    var q = qs[i];
+                    var qObj = new xpd.Question(q.id, xpd.Question.EntityName(), q.question, q.answer);
+                    xpd.db.insertEntity(qObj);
+                    i++;
+                }
+            }
+        }
+        
+        if(rs.hasOwnProperty('tag')){
+            if(rs.tag instanceof Array){
+                var tgs = rs.tag;
+                i = 0;
+                while (i < tgs.length ){
+                    var t = tgs[i];
+                    var tObj = new xpd.Tag(t.id, xpd.Tag.EntityName(), t.tag, t.description);
+                    xpd.db.insertEntity(tObj);
+                    i++;
+                }
+            }
+        }
+        
         // users have a location
         xpd.db.createAssociationTable(xpd.User.EntityName(), xpd.Relations.has(), xpd.Location.EntityName(), true, false);
         
@@ -1956,7 +2011,7 @@ vdvw.c.dataRefresh = function(type,id){
                 i = 0;
                 while( i < uss.length ){
                     var us = uss[i];
-                    var usObj = new xpd.User(us.id, xpd.User.EntityName(), us.screenName, us.loginName);
+                    var usObj = new xpd.User(us.id, xpd.User.EntityName(), us.screenName, us.loginName, us.mail);
                     xpd.db.insertEntity(usObj);
                     xpd.db.insertAssociation(usObj, xpd.Relations.has(), lcTab.select(us.ownLocation[0].id));
                     i++;
@@ -2118,26 +2173,34 @@ vdvw.c.InitCmsPanel = function(){
             return result;
         }
     }
+    jQuery("#cms-mainMenu").find("a").css("cursor","pointer");
     jQuery("#cms-mainMenu").find("a").click(function(event){
         var type = jQuery(event.target).text();
-        var records = null;
+        var table = null;
         var JQ_table = jQuery('<table border="1"></table>');
         if(type == "book"){
-            records = xpd.db.table(xpd.BookPrint.EntityName()).records;
+            table = xpd.db.table(xpd.BookPrint.EntityName());
         }
         else if(type == "question"){
-            records = xpd.db.table(xpd.Question.EntityName()).records;
+            table = xpd.db.table(xpd.Question.EntityName());
         }
         else if(type == "user"){
-            records = xpd.db.table(xpd.User.EntityName()).records;
+            table = xpd.db.table(xpd.User.EntityName());
         }
         else if(type == "review"){
-            records = xpd.db.table(xpd.Review.EntityName()).records;
+            table = xpd.db.table(xpd.Review.EntityName());
         }
         else if(type == "comment"){
-            records = xpd.db.table(xpd.Comment.EntityName()).records;
+            table = xpd.db.table(xpd.Comment.EntityName());
         }
-        $H(records).each(function(pair){
+        else if(type == "tag"){
+            table = xpd.db.table(xpd.Tag.EntityName());
+        }
+        if(!table){
+            alert("no " + type + " table in local dataset!");
+            return;
+        }
+        $H(table.records).each(function(pair){
             var id = pair.key;
             var fields = pair.value;
             var JQ_tableHeader = (JQ_table.children().length == 0) ? jQuery("<tr></tr>") : false;
@@ -2169,6 +2232,8 @@ vdvw.c.InitCmsPanel = function(){
         replaceTypeInItemsListClass(type);
         var JQ_commands = jQuery("#cms-commands");
         JQ_commands.show();
+        var JQ_fieldsList = jQuery("#cms-fieldsList");
+        JQ_fieldsList.hide();
         JQ_commands.find("button").click(function(event){
             var commandClicked = jQuery(event.target).text();
             var type = getTypeFromItemsListClass();
@@ -2176,9 +2241,7 @@ vdvw.c.InitCmsPanel = function(){
             var id = jQuery("#cms-itemsList").find("input[type=checkbox][checked=checked]").val();
             if(className == "Book") className = "BookPrint";
             var subj;
-            if(commandClicked == "add"){
-                subj = new xpd[className]();
-            }else if (typeof(id) == "undefined"){
+            if (typeof(id) == "undefined"){
                 alert("no item selected");
                 return;
             }else{
@@ -2186,7 +2249,7 @@ vdvw.c.InitCmsPanel = function(){
                 subj = table.select(id);
             }
             var JQ_fieldsList = jQuery("#cms-fieldsList");
-            var JQ_table = jQuery('<table border="1"></table>');
+            var JQ_table = jQuery('<table border="1" id="fieldsTab"></table>');
             var JQ_tableHeader = jQuery("<tr></tr>");
             JQ_table.append(JQ_tableHeader);
             JQ_tableHeader.append("<th>field</th>");
@@ -2196,28 +2259,56 @@ vdvw.c.InitCmsPanel = function(){
                     var JQ_tableRow = jQuery("<tr></tr>");
                     JQ_table.append(JQ_tableRow);
                     JQ_tableRow.append("<td>"+pair.key+"</td>");
-                    JQ_tableRow.append("<td>"+pair.value+"</td>");
+                    var JQ_ValueField = jQuery("<td></td>");
+                    if(pair.key == "id" || pair.key == "type"){
+                        JQ_ValueField.text(pair.value);
+                    }else{
+                        var JQ_input = jQuery('<input type="text"></input>');
+                        JQ_input.val(pair.value);
+                        JQ_ValueField.append(JQ_input);
+                    }
+                    JQ_tableRow.append(JQ_ValueField);
                 }
             });
-            JQ_fieldsList.children().first().replaceWith(JQ_table);
+            JQ_fieldsList.children().remove();
+            JQ_fieldsList.append(JQ_table);
+            JQ_okBtn = jQuery('<button id="ok">SAVE CHANGES</button>');
+            JQ_fieldsList.append(JQ_okBtn);
+            JQ_okBtn.click(function(event){
+                var JQ_fieldsTab = jQuery("#fieldsTab");
+                var JQ_fields = JQ_fieldsTab.find("tr");
+                JQ_fields.splice(0,1);//remove table heads row
+                var type;
+                var id;
+                var keyvals = {};
+                JQ_fields.each(function(index,field){
+                    var key = jQuery(field).find("td").first().text();
+                    var value = jQuery(field).find("td").eq(1).find("input").val();
+                    if(!(value)) value = jQuery(field).find("td").eq(1).text();
+                    if(key == "id") id = value;
+                    else if(key == "type") type = value;
+                    else keyvals[key] = value;
+                });
+                if(typeof(id)=="undefined"){
+                    alert("error: no id");
+                }else{
+                    keyvals["id"] = id;
+                }
+                var cmd = drp.tr.comm.generic(type, "store", [keyvals]);
+                drp.postTR({id:"genstor",comm:[cmd]}, function(rsp){
+                    alert("Great success, high five. The data will be refreshed. Click the type in the upper table to see the refreshed data.");
+                    vdvw.c.dataRefresh(this.type, this.id)
+                }.bind({id:id,type:type}), function(err){
+                    var rr = "rr";
+                });
+                // display the result
+                // let the user click OK for a data refresh
+            })
             JQ_fieldsList.show();
             jQuery("#cms-commands").hide();
             jQuery("#cms-itemsList").hide();
         });
     });
-    /*$H(xpd.Mapped).each(function(pair){
-        var instance = new pair.value();
-        if(instance.type){
-            var entity = jQuery("#cmsEntity").render({name:pair.key});
-            panel.find("#entities").append(entity);
-            $H(instance).each(function(pair){
-                var colName = pair.key;
-            });
-        }
-    });
-    jQuery(".getAll").click(vdvw.c.cmsClassNameClick);
-    jQuery(".getAll").css('cursor','pointer');
-    */
 }
 vdvw.c.DestroyCmsPanel = function(){
     vdvw.c.InitCmsPanel();

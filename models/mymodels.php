@@ -26,11 +26,14 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         
         
         $ret = new stdClass();
+        
         $book = R::find("book");
         $comment = R::find("comment");
         $location = R::find("location");
         $review = R::find("review");
         $user = R::find("user");
+        $question = R::find("question");
+        $tag = R::find("tag");
         
         // todo verschillende sets afh van rol
         
@@ -40,6 +43,10 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         $ret->location = R::exportAll($location);
         $ret->review = R::exportAll($review);
         $ret->user = R::exportAll($user);
+        $ret->tag = R::exportAll($tag);
+        
+        
+        
         
         // filter only the relevant front end values
         // and wathc out for secret information
@@ -50,7 +57,15 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         $flt->location = array("Ma","Na","time","id");
         $flt->review = array("body","header","id","ownLocation","time","sharedUser");
         $flt->user = array("id","ownLocation","screenName","time","loginName");
-        
+        $flt->tag = array("id","description","tag");
+        if(Model_Session::hasLoggedInUserForOneOfRoles(array(
+                Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_SYSADMIN),
+                Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_MODERATOR))
+        )){
+            $flt->user[] = 'mail';
+            $ret->question = R::exportAll($question);
+            $flt->question = array('id','question','answer');
+        }
         // TODO dit is een handige algemeen bruikbare functie die in het framework moet
         foreach($ret as $type => $expBeans){
             $expFilt = $flt->$type;
@@ -184,6 +199,28 @@ class Model_Book extends FCF_RedBean_SimpleModel {
         $this->bean->time = time();
     }
 }
+class Model_Tag extends FCF_RedBean_SimpleModel{
+    public function update() {
+        if(Model_Session::hasLoggedInUserForOneOfRoles(array(
+            Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_MODERATOR),
+            Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_SYSADMIN),
+        ))){
+            return true;
+        }else{
+            throw new Exception("tag update fail 1");
+        }
+    }
+	public function delete() {
+        throw new FCF_Exception('not implemented');
+    }
+	public function after_delete() {
+        throw new FCF_Exception('not implemented');
+    }
+    public function dispense() {
+        $this->bean->pending = true;
+        $this->bean->time = time();
+    }
+} 
 class Model_Question extends FCF_RedBean_SimpleModel{
     public function update() {
         if(Model_Session::hasLoggedInUserForOneOfRoles(array(

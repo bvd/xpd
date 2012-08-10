@@ -160,6 +160,7 @@ body {margin-top:0;}
                     <li><a>user</a></li>
                     <li><a>review</a></li>
                     <li><a>comment</a></li>
+                    <li><a>tag</a></li>
                 </ul>
             </div>
             <div id="cms-itemsList" style="height: 500px; overflow:auto;">
@@ -171,7 +172,7 @@ body {margin-top:0;}
             <div id="cms-commands" style="display: none">
                 <p>available commands</p>
                 <fieldset>
-                    <button>add</button><button>edit</button><button>delete</button>
+                    <button>edit</button>
                 </fieldset>
             </div>
         </div>
@@ -273,6 +274,17 @@ body {margin-top:0;}
                 <span>unambiguous answer to question:</span>
                 <input 	id="answer" 	type="text" 	title="answer"        class="send"	/>
                 <button id="addQuestion">SAVE QUESTION</button>
+            </fieldset>
+        </div>
+    </script>
+    <script id="drpAddTagTPL" type="text/x-jquery-tmpl">
+        <div title="add a tag" class="drpDialog">
+            <fieldset class="drpAddTagForm">
+                <span>The tag (one word):</span><br />
+                <input 	id="tag" 	type="text" 	title="tag"      class="send"	/><br />
+                <span>The description (a multitude of words):</span><br />
+                <input 	id="description" 	type="text" 	title="description"        class="send"	/>
+                <button id="addTag">SAVE TAG</button>
             </fieldset>
         </div>
     </script>
@@ -566,6 +578,7 @@ body {margin-top:0;}
         <br/>
         <button id="explainSendBook"          onclick="drp.test.explainSendBook()">EXPLAIN SEND BOOK</button>
         <button id="sendBook"                 onclick="drp.test.sendBook()">SEND BOOK</button>
+        <button id="addTag"                   onclick="drp.test.addTagDialog()">ADD TAG</button>
     </div><?php if (!(isset($_GET["testbuttons"]))) echo "-->"; ?>   
 
 

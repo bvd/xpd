@@ -229,11 +229,12 @@ drp.test.loginDialog = function(){
                 if(showCMSButton){
                     vdvw.c.InitCmsPanel();
                     jQuery("#cms-link").show();
+                    vdvw.c.dataRefresh(xpd.User.EntityName(), rsp.login.result.userId);
                 }else{
                     vdvw.c.DestroyCmsPanel();
                     jQuery("#cms-link").hide();
+                    vdvw.c.click(xpd.User.EntityName(),rsp.login.result.userId);
                 }
-                vdvw.c.click(xpd.User.EntityName(),rsp.login.result.userId);
             },
             function(errorMessage, errorCode){
                 var hMess = null;
@@ -320,6 +321,7 @@ drp.test.createLogoutDialog = function(){
                 jQuery("#login-link").show();
                 jQuery("#login-name").hide();
                 jQuery("#cms-link").hide();
+                vdvw.c.dataRefresh();
             }
         );
     });
@@ -373,6 +375,20 @@ drp.test.addQuestionDialog = function(){
         drp.postTR(
         {
             id:"addQuestion",
+            comm:[comm]
+        },
+        function(rsp){
+            jQuery(dl).dialog('close');
+        });
+    });
+}
+drp.test.addTagDialog = function(){
+    var dl = drp.createDialog(jQuery('#drpAddTagTPL').render({}));
+    jQuery(".drpAddTagForm #addTag").click(function(e){
+        var comm = drp.tr.comm.addTag(jQuery(".drpAddTagForm #tag").val(),jQuery(".drpAddTagForm #description").val());
+        drp.postTR(
+        {
+            id:"addTag",
             comm:[comm]
         },
         function(rsp){

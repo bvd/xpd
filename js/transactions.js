@@ -23,6 +23,10 @@ drp.tr.sys.nuke = function(actionId,callback){
 drp.tr.comm.comm = function(method,params){
 	return { jsonrpc:"2.0", id:method, method:method, params:params};
 }
+// algemene command
+drp.tr.comm.generic = function(type,method,params){
+    return drp.tr.comm.comm(type+":"+method,params);
+}
 // genereer een challenge om mee in te loggen
 drp.tr.comm.SessionGenerateChallenge = function(){
 	return drp.tr.comm.comm("session:generateChallenge",[]);
@@ -63,9 +67,13 @@ drp.tr.comm.addBook = function (bookUnique){
     return drp.tr.comm.comm("book:store",[{"pending":0,"bookUnique":bookUnique}]);
 }
 //
-// voeg een boek toe depr
+// voeg een vraag toe
 drp.tr.comm.addQuestion = function (q,a){
     return drp.tr.comm.comm("question:store",[{question:q,answer:a}]);
+}
+// voeg een tag toe
+drp.tr.comm.addTag = function(tag, description){
+    return drp.tr.comm.comm("tag:store",[{tag:tag,description:description}]);
 }
 // krijg een vraag
 drp.tr.comm.getQuestion  = function(){
