@@ -429,6 +429,8 @@ xpd.Comment = Class.create(xpd.Review,{
 xpd.Comment.EntityName = function(){return 'comment';};
 xpd.BookPrint = Class.create(vdvw.m.Entity, {
    initialize: function($super, id, entityName){
+       if(typeof(id) == "undefined") id = 0;
+       if(typeof(entityName == "undefined")) entityName = xpd.BookPrint.EntityName();
        $super(id, entityName);
    }
 });
@@ -469,12 +471,13 @@ xpd.Mapped.StateObject = Class.create({
         return table.select();
     }
 })
-xpd.Mapped.User = Class.create({
-    initialize: function(type, id, loginName, userName){
+xpd.Mapped.User = Class.create(xpd.Mapped.StateObject,{
+    initialize: function($super, type, id, loginName, userName){
         this.loginName = loginName;
         this.userName = userName;
         this.id = id;
         this.type = xpd.User.EntityName();
+        $super(this.type,id,null,null);
     }
 })
 xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
@@ -484,8 +487,8 @@ xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
         this.hTime =  xpd.Mappers.convertToHumanReadableLocalTimeString(bookStateTimestamp);
         this.hId = (parseInt(id)+1)+'';
         this.ownerType = xpd.User.EntityName();
-        var type = xpd.User.EntityName();
-        $super(type, id, bookStateTimestamp, ownerMa, ownerNa);
+        this.type = xpd.User.EntityName();
+        $super(this.type, id, bookStateTimestamp, ownerMa, ownerNa);
     }
 })
 xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
@@ -502,8 +505,8 @@ xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
         this.commentedEntityId = commentedEntityId;
         this.commentedEntityHead = commentedEntityHead;
         this.writable = vdvw.m.Session.getUid() == this.ownerId;
-        var type = xpd.Comment.EntityName();
-        $super(type, id, time, locMa, locNa);
+        this.type = xpd.Comment.EntityName();
+        $super(this.type, id, time, locMa, locNa);
     }
 })
 xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
@@ -519,7 +522,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
         var time;
         var head;
         var content;
-        var type = xpd.Review.EntityName();
+        this.type = xpd.Review.EntityName();
         var id;
         var ma;
         var na;
@@ -542,7 +545,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
         this.content = content;
         this.ownerType = xpd.User.EntityName();
         this.writable = vdvw.m.Session.getUid() == this.ownerId;
-        $super(type, id, time, ma, na);
+        $super(this.type, id, time, ma, na);
     }
 })
 /**
@@ -2080,8 +2083,129 @@ vdvw.c.InitCmsPanel = function(){
     var emptyPanel = jQuery("#cmsPanelTPL").render({});
     var JQ_emptyPanel = jQuery(emptyPanel);
     var panel = JQ_emptyPanel.appendTo(jQuery("body"));
-    
-    $H(xpd.Mapped).each(function(pair){
+    var replaceTypeInItemsListClass = function(typeName){
+        var JQ_itemsList = jQuery("#cms-itemsList");
+        var itemsListClass = JQ_itemsList.attr("class");
+        var newItemsListClass = "";
+        if(itemsListClass){
+            itemsListClass = itemsListClass.split(" ");
+            itemsListClass.each(function(v,k){
+                var newClass = "";
+                if(v.substr(0,9) == "itemtype-"){
+                    newClass = "itemtype-" + typeName;
+                }else{
+                    newClass = v;
+                }
+                newItemsListClass += (newItemsListClass == "") ? newClass : " " + newClass;
+            });
+        }else{
+            newItemsListClass = "itemtype-" + typeName;
+        }
+        JQ_itemsList.attr("class", newItemsListClass);
+    }
+    var getTypeFromItemsListClass = function(){
+        var JQ_itemsList = jQuery("#cms-itemsList");
+        var itemsListClass = JQ_itemsList.attr("class");
+        if(itemsListClass){
+            itemsListClass = itemsListClass.split(" ");
+            var result;
+            itemsListClass.each(function(v,k){
+                if(v.substr(0,9) == "itemtype-"){
+                    result =  v.substr(9);
+                    throw $break;
+                }
+            });
+            return result;
+        }
+    }
+    jQuery("#cms-mainMenu").find("a").click(function(event){
+        var type = jQuery(event.target).text();
+        var records = null;
+        var JQ_table = jQuery('<table border="1"></table>');
+        if(type == "book"){
+            records = xpd.db.table(xpd.BookPrint.EntityName()).records;
+        }
+        else if(type == "question"){
+            records = xpd.db.table(xpd.Question.EntityName()).records;
+        }
+        else if(type == "user"){
+            records = xpd.db.table(xpd.User.EntityName()).records;
+        }
+        else if(type == "review"){
+            records = xpd.db.table(xpd.Review.EntityName()).records;
+        }
+        else if(type == "comment"){
+            records = xpd.db.table(xpd.Comment.EntityName()).records;
+        }
+        $H(records).each(function(pair){
+            var id = pair.key;
+            var fields = pair.value;
+            var JQ_tableHeader = (JQ_table.children().length == 0) ? jQuery("<tr></tr>") : false;
+            if(JQ_tableHeader) JQ_tableHeader.append("<th></th>");
+            var JQ_tableRow = jQuery('<tr></tr>');
+            JQ_tableRow.append('<td><input type="checkbox" name="'+id+'" value="'+id+'" /></td>')
+            $H(fields).each(function(pair){
+                var fieldName = pair.key;
+                var fieldValue = pair.value;
+                if(typeof(fieldValue) !="function"){
+                    if(JQ_tableHeader) JQ_tableHeader.append("<th>"+fieldName+"</th>");
+                    JQ_tableRow.append("<td>"+fieldValue+"</td>");
+                }
+            });
+            if(JQ_tableHeader) JQ_table.append(JQ_tableHeader);
+            JQ_table.append(JQ_tableRow);
+        });
+        var JQ_itemsList = jQuery("#cms-itemsList");
+        JQ_itemsList.children().first().replaceWith(JQ_table);
+        JQ_table.find("input[type=checkbox]").click(function(event){
+            var selectedId = jQuery(event.target).val();
+            var checked = jQuery(event.target).attr("checked") == "checked";
+            var JQ_list = jQuery("#cms-itemsList");
+            JQ_list.find("input[type=checkbox]").removeAttr("checked");
+            if(checked) JQ_list.find("input[type=checkbox][value="+selectedId+"]").attr("checked","checked");
+        });
+        JQ_itemsList.show();
+        JQ_itemsList.css("height","400");
+        replaceTypeInItemsListClass(type);
+        var JQ_commands = jQuery("#cms-commands");
+        JQ_commands.show();
+        JQ_commands.find("button").click(function(event){
+            var commandClicked = jQuery(event.target).text();
+            var type = getTypeFromItemsListClass();
+            var className = type.substr(0,1).toUpperCase() + type.substr(1);
+            var id = jQuery("#cms-itemsList").find("input[type=checkbox][checked=checked]").val();
+            if(className == "Book") className = "BookPrint";
+            var subj;
+            if(commandClicked == "add"){
+                subj = new xpd[className]();
+            }else if (typeof(id) == "undefined"){
+                alert("no item selected");
+                return;
+            }else{
+                var table = xpd.db.table(type);
+                subj = table.select(id);
+            }
+            var JQ_fieldsList = jQuery("#cms-fieldsList");
+            var JQ_table = jQuery('<table border="1"></table>');
+            var JQ_tableHeader = jQuery("<tr></tr>");
+            JQ_table.append(JQ_tableHeader);
+            JQ_tableHeader.append("<th>field</th>");
+            JQ_tableHeader.append("<th>value</th>");
+            $H(subj).each(function(pair){
+                if(typeof(pair.value)!= "function"){
+                    var JQ_tableRow = jQuery("<tr></tr>");
+                    JQ_table.append(JQ_tableRow);
+                    JQ_tableRow.append("<td>"+pair.key+"</td>");
+                    JQ_tableRow.append("<td>"+pair.value+"</td>");
+                }
+            });
+            JQ_fieldsList.children().first().replaceWith(JQ_table);
+            JQ_fieldsList.show();
+            jQuery("#cms-commands").hide();
+            jQuery("#cms-itemsList").hide();
+        });
+    });
+    /*$H(xpd.Mapped).each(function(pair){
         var instance = new pair.value();
         if(instance.type){
             var entity = jQuery("#cmsEntity").render({name:pair.key});
@@ -2093,6 +2217,7 @@ vdvw.c.InitCmsPanel = function(){
     });
     jQuery(".getAll").click(vdvw.c.cmsClassNameClick);
     jQuery(".getAll").css('cursor','pointer');
+    */
 }
 vdvw.c.DestroyCmsPanel = function(){
     vdvw.c.InitCmsPanel();

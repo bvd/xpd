@@ -51,7 +51,7 @@ body {margin-top:0;}
         <script type="text/javascript" src="app/js/ext/markerwithlabel.js"></script>
         <script type="text/javascript" src="app/js/ext/v3_epoly_proj.js"></script>
         <!-- JQR -->
-        <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         <script type="text/javascript" src="app/js/ext/jquery-ui.js"></script>
         <script src="app/js/ext/jsrender.js" type="text/javascript"></script>
         <script type="text/javascript" src="app/js/ext/jquery.mousewheel.js"></script>
@@ -152,13 +152,28 @@ body {margin-top:0;}
     <!-- panel templates -->	
     <!-- panel templates -->
     <script id="cmsPanelTPL" type="text/x-jquery-tmpl">
-        <div title="content management system"  id="cms-panel" class="drpPanel" style="width: 1000px">
-            <div id="entities" style="height: 1000px;"></div>
-        </div>
-    </script>
-    <script id="cmsEntity" type="text/x-jquery-tmpl">
-        <div title="content management system" class="cmsEntity">
-            <span class="getAll" id="{{=name}}">{{=name}}</span>
+        <div title="lasagna management system"  id="cms-panel" class="drpPanel" style="width: 1000px">
+            <div id="cms-mainMenu">
+                <ul>
+                    <li><a>book</a></li>
+                    <li><a>question</a></li>
+                    <li><a>user</a></li>
+                    <li><a>review</a></li>
+                    <li><a>comment</a></li>
+                </ul>
+            </div>
+            <div id="cms-itemsList" style="height: 500px; overflow:auto;">
+                <p>click a type to show items</p>
+            </div>
+            <div id="cms-fieldsList" style="height: 400px; display: none; overflow:auto;">
+                <p>items list (empty)</p>
+            </div>
+            <div id="cms-commands" style="display: none">
+                <p>available commands</p>
+                <fieldset>
+                    <button>add</button><button>edit</button><button>delete</button>
+                </fieldset>
+            </div>
         </div>
     </script>
     <!-- dialog templates -->	
