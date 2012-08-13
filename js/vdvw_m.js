@@ -583,6 +583,34 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
  * MAPPER FUNCTIONS COLLECT PRIMARY DATA (FROM DB) AND CREATE COMPOSITE (MAPPED) OBJECTS
  */
 xpd.Mappers = {};
+xpd.Mappers.getReviewsForTagId = function(id){
+    var revAssocTab = xpd.db.table(xpd.Review.EntityName() + "_" + xpd.Relations.has() + "_" + xpd.Tag.EntityName());
+    var ret = [];
+    if(revAssocTab){
+        var q = vdvw.m.DataBase.createQuery("where to is " + id);
+        var resultSet = revAssocTab.select(q);
+        resultSet.each(function(v,k){
+            var revRec = xpd.Mappers.getReviewForId(v.from);
+            var mpRev = xpd.Mappers.getMappedReviewForReview(revRec);
+            ret.push(mpRev);
+        });
+    }
+    return ret;
+}
+xpd.Mappers.getCommentsForTagId = function(id){
+    var comAssocTab = xpd.db.table(xpd.Comment.EntityName() + "_" + xpd.Relations.has() + "_" + xpd.Tag.EntityName());
+    var ret = [];
+    if(comAssocTab){
+        var q = vdvw.m.DataBase.createQuery("where to is " + id);
+        var resultSet = comAssocTab.select(q);
+        resultSet.each(function(v,k){
+            var comRec = xpd.Mappers.getReviewForId(v.from);
+            var mpCom = xpd.Mappers.getMappedReviewForReview(comRec);
+            ret.push(mpCom);
+        });
+    }
+    return ret;
+}
 xpd.Mappers.getRelationOfBookStayWithUser = function(bookId, includeHistoryFalse){
     if(typeof includeHistoryFalse == "undefined"){
         includeHistoryFalse = false;
@@ -2444,7 +2472,7 @@ vdvw.c.VisualizeActionsForUserId = function(userId){
     var comments = xpd.Mappers.getCommentsForUser(userId);
     var reviews = xpd.Mappers.getReviewsForBookOwner(userId);
     reviews.each(function(review){
-        vdvw.c.VisualizeReview(review);
+        vdvw.c.VisualizeReview(review,false,true);
     });
     comments.each(function(comment){
         vdvw.c.VisualizeComment(comment);
@@ -2461,11 +2489,13 @@ vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter){
     }
     return comMarker;
 }
-vdvw.c.VisualizeReview = function(mappedReview,visualizeReviewer){
+vdvw.c.VisualizeReview = function(mappedReview,visualizeReviewer,visualizeReviewerToReviewLine){
     var icon = xpd.viz.icon.factorForReview(mappedReview);
     var revMarker = xpd.viz.drawIcon(icon, mappedReview.type, mappedReview.id);
-    var lineFromLocation = new google.maps.LatLng(mappedReview.ownerLocation.Ma, mappedReview.ownerLocation.Na);
-    var line = xpd.viz.drawLine('#c00', lineFromLocation, revMarker.getPosition(), false, 1);
+    if(visualizeReviewerToReviewLine){
+        var lineFromLocation = new google.maps.LatLng(mappedReview.ownerLocation.Ma, mappedReview.ownerLocation.Na);
+        var line = xpd.viz.drawLine('#c00', lineFromLocation, revMarker.getPosition(), false, 1);
+    }
     xpd.viz.drawBreadCrumb(jQuery("#currentBookReview").render(mappedReview));
     if(visualizeReviewer){
         vdvw.c.VisualizeUserOnTheMap(mappedReview.ownerId);
@@ -2565,7 +2595,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     var review = xpd.Mappers.getReviewForId(mappedComment.commentedEntityId);
     var mappedReview = xpd.Mappers.getMappedReviewForReview(review);
     var commentMarker = vdvw.c.VisualizeComment(mappedComment, true);
-    var commentedReviewMarker = vdvw.c.VisualizeReview(mappedReview,true);
+    var commentedReviewMarker = vdvw.c.VisualizeReview(mappedReview,true,true);
     xpd.viz.drawLine('#888', commentMarker.getPosition(), commentedReviewMarker.getPosition(), false, 1);
     var factoredReview = xpd.viz.contentpane.factorForReview(mappedReview);
     var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview);
@@ -2605,7 +2635,14 @@ vdvw.c.closeFaqAndAbout = function(){
     }
 }
 vdvw.c.VisualizeItemsForTagId = function(id){
-    alert('tag id ' + id);
+    var revs = xpd.Mappers.getReviewsForTagId(id);
+    var coms = xpd.Mappers.getCommentsForTagId(id);
+    revs.each(function(v){
+        vdvw.c.VisualizeReview(v, false, false);
+    });
+    coms.each(function(v){
+        vdvw.c.VisualizeComment(v, false);
+    });
 }
 /**
  * SHOW SOMETHING ON THE SCREEN
