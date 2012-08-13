@@ -553,9 +553,24 @@ body {margin-top:0;}
     <script id="loginNameTPL" type="text/x-jquery-tmpl">
         <span>settings for {{=name}}</span>
     </script>
-
-
-
+    <script id="drpTagsListTPL" type="text/x-jquery-tmpl">
+        <div title="available tags" style="width: 900px;">
+            <table id="tagsTable">
+                <tr>
+                    <th width="100px" style="text-align:left;">tag</th>
+                    <th width="600px" style="text-align:left;">description</th>
+                    <th width="100px" style="text-align:left;">show on map</th>
+                </tr>
+            </table>
+        </div>
+    </script>
+    <script id="drpTagTableRowTPL" type="text/x-jquery-tmpl">
+        <tr>
+            <td>{{=tag}}</td>
+            <td>{{=description}}</td>
+            <td><input type="button" id="fcf-{{=type}}-{{=id}}" value="show on map"></input></td>
+        </tr>
+    </script>
     <script type="text/javascript">
         var RunAfterInit = [];
 <?php if (isset($_GET['userInvite'])): ?>

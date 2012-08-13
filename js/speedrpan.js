@@ -326,6 +326,21 @@ drp.test.createLogoutDialog = function(){
         );
     });
 }
+drp.test.tagsDialog = function(){
+    var dl = drp.createDialog(jQuery('#drpTagsListTPL').render({}));
+    var tab = dl.find("#tagsTable");
+    if(!xpd.db.table(xpd.Tag.EntityName())){
+        alert("no table for " + xpd.Tag.EntityName() + " in database.")
+    }
+    var tags = xpd.db.table(xpd.Tag.EntityName()).records;
+    $H(tags).each(function(v){
+        tab.append(jQuery('#drpTagTableRowTPL').render(v.value));
+    });
+    tab.find("input[type=button]").click(function(event){
+        jQuery(dl).dialog('close');
+        vdvw.c.onClick.call(event.target,event);
+    });
+}
 drp.test.cmsPanel = function(panelDiv){
     var dl = drp.createPanel(panelDiv);
 }

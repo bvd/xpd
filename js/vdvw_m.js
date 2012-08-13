@@ -1118,6 +1118,9 @@ vdvw.v.FLoginWrapper = function(){
     var cms = div.append(jQuery('<div/>',{
         id: 'cms-link'
     }).append('cms'));
+    var tags = div.append(jQuery('<div/>',{
+        id: 'tags-link'
+    }).append('tags'));
    
     return div;
 }
@@ -1635,6 +1638,7 @@ vdvw.c.Startup = Class.create({
         jQuery('#logout-link').click(vdvw.c.onLogoutClick);
         jQuery('#login-name').click(vdvw.c.onLoginNameClick);
         jQuery('#cms-link').click(vdvw.c.onCmsClick);
+        jQuery('#tags-link').click(vdvw.c.onTagsClick);
     },
     generateFakeData: function(){
         
@@ -1974,6 +1978,9 @@ vdvw.c.onLoginNameClick = function(event){
 }
 vdvw.c.onCmsClick=function(event){
     drp.test.cmsPanel(vdvw.v.Const.retrieveCmsPanel());
+}
+vdvw.c.onTagsClick=function(event){
+    drp.test.tagsDialog();
 }
 vdvw.c.dataRefresh = function(type,id){
     drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
@@ -2426,15 +2433,13 @@ vdvw.c.VisualizeConnections = function(type,id){
             vdvw.c.ShowBookLocationsExcept(bookstop.id);
         }
     }
+    else if(type == xpd.Tag.EntityName()){
+        vdvw.c.VisualizeItemsForTagId(id);
+    }
     else{
         alert("cannot display type: " + type);
     }
 }
-/*vdvw.c.VisualizeActionsOfLatestUserForBook = function(id){
-    // TODO - visualize when it has them
-    var bookWithUser = xpd.Mappers.getBookAtCurrentLocationForId(id);
-    this.VisualizeActionsForUserId(bookWithUser[0].ownerId);
-}*/
 vdvw.c.VisualizeActionsForUserId = function(userId){
     var comments = xpd.Mappers.getCommentsForUser(userId);
     var reviews = xpd.Mappers.getReviewsForBookOwner(userId);
@@ -2548,6 +2553,8 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
     var factoredReview = xpd.viz.contentpane.factorForReview(review);
     var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview);
     var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, review.mappedComments);
+    reviewWithAddedComments.find(".xpd-tag").click(vdvw.c.onClick);
+    reviewWithAddedComments.find(".xpd-tag").css({'cursor': 'pointer', 'text-decoration': 'underline'});
     reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
     reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
     xpd.viz.contentpane.selectComment(null, review.id);
@@ -2563,6 +2570,8 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     var factoredReview = xpd.viz.contentpane.factorForReview(mappedReview);
     var JQ_reviewInContentPane = xpd.viz.drawContentPane(factoredReview);
     var reviewWithAddedComments = xpd.viz.contentpane.addCommentsToReview(JQ_reviewInContentPane, mappedReview.mappedComments);
+    reviewWithAddedComments.find(".xpd-tag").click(vdvw.c.onClick);
+    reviewWithAddedComments.find(".xpd-tag").css({'cursor': 'pointer', 'text-decoration': 'underline'});
     reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
     reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
     xpd.viz.contentpane.selectComment(mappedComment.id, mappedReview.id);
@@ -2595,6 +2604,9 @@ vdvw.c.closeFaqAndAbout = function(){
         jQuery('#about-text').fadeOut();
     }
 }
+vdvw.c.VisualizeItemsForTagId = function(id){
+    alert('tag id ' + id);
+}
 /**
  * SHOW SOMETHING ON THE SCREEN
  */
@@ -2626,7 +2638,7 @@ xpd.viz.contentpane.factorForReview = function (review) {
     var JQ_tagsContainer = JQ_renderedReview.find(".tagsContainer");
     if(review.tags){
         review.tags.each(function(v,k){
-            JQ_tagsContainer.append('<span class="xpd-tag">' + v.tag + '</span>');
+            JQ_tagsContainer.append('<span class="xpd-tag" title="'+ v.description +'" id="fcf-' + v.type + '-' + v.id + '">' + v.tag + '</span>');
         });
     }
     return JQ_renderedReview;
@@ -2651,7 +2663,7 @@ xpd.viz.contentpane.factorForComment = function (comment) {
     var JQ_tagsContainer = JQ_comment.find(".tagsContainer");
     if(comment.tags){
         comment.tags.each(function(v,k){
-            JQ_tagsContainer.append('<span class="xpd-tag">' + v.tag + '</span>');
+            JQ_tagsContainer.append('<span class="xpd-tag" title="' + v.description + '" id="fcf-' + v.type + '-' + v.id + '">' + v.tag + '</span>');
         });
     }
     return JQ_comment;
