@@ -53,11 +53,11 @@ class Model_Misc extends FCF_RedBean_SimpleModel{
         // and of lists only take the ID
         $flt = new stdClass();
         $flt->book = array("id","sharedUser");
-        $flt->comment = array("body","header","id","ownLocation","time","sharedReview","sharedUser");
+        $flt->comment = array("body","header","id","ownLocation","time","sharedReview","sharedUser","sharedTag");
         $flt->location = array("Ma","Na","time","id");
-        $flt->review = array("body","header","id","ownLocation","time","sharedUser");
+        $flt->review = array("body","header","id","ownLocation","time","sharedUser","sharedTag");
         $flt->user = array("id","ownLocation","screenName","time","loginName");
-        $flt->tag = array("id","description","tag");
+        $flt->tag = array("id","description","tag","sharedComment","sharedReview");
         if(Model_Session::hasLoggedInUserForOneOfRoles(array(
                 Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_SYSADMIN),
                 Model_Role::getRoleIdForName(Model_Role::$ROLE_NAME_MODERATOR))

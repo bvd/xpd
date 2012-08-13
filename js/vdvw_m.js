@@ -396,7 +396,7 @@ vdvw.m.DataBase.createQuery = function(query){
 xpd.User = Class.create ( vdvw.m.Entity , {
     initialize : function ($super, id, type, screenName, loginName, email){
         if(typeof(id) == "undefined") id = 0;
-        if(typeof(type == "undefined")) type = xpd.User.EntityName();
+        if(typeof(type) == "undefined") type = xpd.User.EntityName();
         this.screenName = screenName;
         this.loginName = loginName;
         this.email = email;
@@ -407,7 +407,7 @@ xpd.User.EntityName = function(){return 'user';};
 xpd.Location = Class.create(vdvw.m.Entity ,{
    initialize: function($super, id, type, Ma, Na){
        if(typeof(id) == "undefined") id = 0;
-       if(typeof(type == "undefined")) type = xpd.Location.EntityName();
+       if(typeof(type) == "undefined") type = xpd.Location.EntityName();
        this.Ma = Ma;
        this.Na = Na;
        $super(id,type);
@@ -417,7 +417,7 @@ xpd.Location.EntityName = function(){return 'location';};
 xpd.Review = Class.create(vdvw.m.Entity,{
     initialize: function($super, id, type, time, head, content, ownerId){
         if(typeof(id) == "undefined") id = 0;
-        if(typeof(type == "undefined")) type = xpd.Review.EntityName();
+        if(typeof(type) == "undefined") type = xpd.Review.EntityName();
         this.time = time;
         this.head = head;
         this.content = content;
@@ -429,7 +429,7 @@ xpd.Review.EntityName = function(){return 'review';};
 xpd.Comment = Class.create(xpd.Review,{
     initialize: function($super, id, type, time, head, content, ownerId, commentedEntityType, commentedId){
         if(typeof(id) == "undefined") id = 0;
-        if(typeof(type == "undefined")) type = xpd.Comment.EntityName();
+        if(typeof(type) == "undefined") type = xpd.Comment.EntityName();
         this.commentedEntityType = commentedEntityType;
         this.commentedId = commentedId;
         $super(id,type,time,head,content,ownerId);
@@ -521,7 +521,7 @@ xpd.Mapped.BookStop = Class.create(xpd.Mapped.StateObject,{
     }
 })
 xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
-    initialize: function($super, type, id, time, locMa, locNa, ownerId, ownerMa, ownerNa, ownerName, head, content, commentedEntityType, commentedEntityId, commentedEntityHead){
+    initialize: function($super, type, id, time, locMa, locNa, ownerId, ownerMa, ownerNa, ownerName, head, content, commentedEntityType, commentedEntityId, commentedEntityHead, tags){
         this.ownerId = ownerId;
         this.ownerName = ownerName;
         this.ownerMa = ownerMa;
@@ -535,12 +535,13 @@ xpd.Mapped.MappedComment = Class.create(xpd.Mapped.StateObject,{
         this.commentedEntityHead = commentedEntityHead;
         this.writable = vdvw.m.Session.getUid() == this.ownerId;
         this.type = xpd.Comment.EntityName();
+        this.tags = tags;
         $super(this.type, id, time, locMa, locNa);
     }
 })
 xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
     // TODO bad practice to create from another object?
-    initialize: function($super, review, ownerLocation, reviewLocation, mappedComments, reviewedBook){
+    initialize: function($super, review, ownerLocation, reviewLocation, mappedComments, reviewedBook, tags){
         this.review = review;
         this.reviewedBook = reviewedBook;
         this.ownerLocation = ownerLocation;
@@ -555,6 +556,7 @@ xpd.Mapped.MappedReview = Class.create(xpd.Mapped.StateObject, {
         var id;
         var ma;
         var na;
+        this.tags = tags;
         if(typeof(review) != "undefined"){
             ownerId = review.ownerId;
             ownerName = review.ownerName;
@@ -700,9 +702,32 @@ xpd.Mappers.getMappedCommentsForReviewId = function(reviewId){
     }
     return ret;
 }
+xpd.Mappers.getMappedTagsForReviewId = function(reviewId){
+    var q = vdvw.m.DataBase.createQuery('where from is '+reviewId);
+    var assocTabName = xpd.Review.EntityName() + '_' + xpd.Relations.has() + '_' + xpd.Tag.EntityName();
+    var assocTab = xpd.db.table(assocTabName);
+    var records = assocTab.select(q);
+    var ret = [];
+    records.each(function(v,k){
+        ret.push(xpd.db.table(xpd.Tag.EntityName()).select(v.to));
+    });
+    return ret;
+}
+xpd.Mappers.getMappedTagsForCommentId = function(commentId){
+    var q = vdvw.m.DataBase.createQuery('where from is '+commentId);
+    var assocTabName = xpd.Comment.EntityName() + '_' + xpd.Relations.has() + '_' + xpd.Tag.EntityName();
+    var assocTab = xpd.db.table(assocTabName);
+    var records = assocTab.select(q);
+    var ret = [];
+    records.each(function(v,k){
+        ret.push(xpd.db.table(xpd.Tag.EntityName()).select(v.to));
+    });
+    return ret;
+}
 xpd.Mappers.getMappedCommentForComment = function(comment){
     var type = comment.type;
     var id = comment.id;
+    var tags = xpd.Mappers.getMappedTagsForCommentId(id);
     var time = comment.time;
     // does the comment itself have a location?
     var cloc = xpd.Mappers.getLocationForCommentId(comment.id);
@@ -724,7 +749,7 @@ xpd.Mappers.getMappedCommentForComment = function(comment){
     var commentedEntityType = comment.commentedEntityType;
     var commentedEntityId = comment.commentedId;
     var commentedEntityHead = xpd.db.table(comment.commentedEntityType).select(comment.commentedId).head;
-    return new xpd.Mapped.MappedComment(type,id,time,locMa,locNa,ownerId,ownerMa,ownerNa,ownerName,head,content,commentedEntityType,commentedEntityId, commentedEntityHead);
+    return new xpd.Mapped.MappedComment(type,id,time,locMa,locNa,ownerId,ownerMa,ownerNa,ownerName,head,content,commentedEntityType,commentedEntityId, commentedEntityHead, tags);
 }
 xpd.Mappers.getCommentsForUser = function (ownerId) {
     var ret = [];
@@ -740,11 +765,12 @@ xpd.Mappers.getCommentsForUser = function (ownerId) {
 }
 xpd.Mappers.getMappedReviewForReview = function(review){
     review.ownerName = xpd.db.table(xpd.User.EntityName()).select(review.ownerId).screenName;
+    var tags = xpd.Mappers.getMappedTagsForReviewId(review.id);
     var ownerLocation = xpd.Mappers.getLocationForUserId(review.ownerId);
     var reviewLocation = xpd.Mappers.getLocationForReviewId(review.id);
     var mappedComments = xpd.Mappers.getMappedCommentsForReviewId(review.id);
-	var reviewedBook = xpd.Mappers.getBookStopForUserId(review.ownerId);
-    return new xpd.Mapped.MappedReview(review, ownerLocation, reviewLocation, mappedComments, reviewedBook);
+    var reviewedBook = xpd.Mappers.getBookStopForUserId(review.ownerId);
+    return new xpd.Mapped.MappedReview(review, ownerLocation, reviewLocation, mappedComments, reviewedBook, tags);
 }
 xpd.Mappers.getBookAtCurrentLocationForId = function(id){
     var getBookQ = vdvw.m.DataBase.createQuery('where id is ' + id + ' orderby id ascending');   
@@ -1985,6 +2011,13 @@ vdvw.c.dataRefresh = function(type,id){
             }
         }
         
+        // tags may be associated to reviews or to comments
+        var reviewHasTagStr = xpd.Review.EntityName() + xpd.Relations.has() + xpd.Tag.EntityName();
+        xpd.db.createAssociationTable(xpd.Review.EntityName(), xpd.Relations.has(), xpd.Tag.EntityName(), false, false);
+        var commentHasTagStr = xpd.Comment.EntityName() + xpd.Relations.has() + xpd.Tag.EntityName();
+        xpd.db.createAssociationTable(xpd.Comment.EntityName(), xpd.Relations.has(), xpd.Tag.EntityName(), false, false);
+        
+        
         if(rs.hasOwnProperty('tag')){
             if(rs.tag instanceof Array){
                 var tgs = rs.tag;
@@ -1997,6 +2030,8 @@ vdvw.c.dataRefresh = function(type,id){
                 }
             }
         }
+        // remember the table to add associations later
+        var tagTab = xpd.db.table(xpd.Tag.EntityName());
         
         // users have a location
         xpd.db.createAssociationTable(xpd.User.EntityName(), xpd.Relations.has(), xpd.Location.EntityName(), true, false);
@@ -2060,6 +2095,11 @@ vdvw.c.dataRefresh = function(type,id){
                     var rvObj = new xpd.Review(rv.id, xpd.Review.EntityName(), rv.time, rv.header, rv.body, rv.sharedUser[0].id);
                     xpd.db.insertEntity(rvObj);
                     xpd.db.insertAssociation(rvObj, xpd.Relations.has(), lcTab.select(rv.ownLocation[0].id));
+                    if(rv.hasOwnProperty("sharedTag")){
+                        rv.sharedTag.each(function(v,k){
+                            xpd.db.insertAssociation(rvObj, xpd.Relations.has(), tagTab.select(v.id));
+                        });
+                    }
                     i++;
                 }
             }
@@ -2078,6 +2118,11 @@ vdvw.c.dataRefresh = function(type,id){
 					var cmObj = new xpd.Comment( cm.id, xpd.Comment.EntityName(), cm.time, cm.header, cm.body, cm.sharedUser[0].id, xpd.Review.EntityName(), cm.sharedReview[0].id);
                     xpd.db.insertEntity(cmObj);
                     xpd.db.insertAssociation(cmObj, xpd.Relations.has(), lcTab.select(cm.ownLocation[0].id));
+                    if(cm.hasOwnProperty("sharedTag")){
+                        cm.sharedTag.each(function(v,k){
+                            xpd.db.insertAssociation(cmObj, xpd.Relations.has(), tagTab.select(v.id));
+                        });
+                    }
                     i++;
                 }
             }
@@ -2570,9 +2615,6 @@ xpd.viz.breadcrumb.fadeHistorically = function () {
     jQuery('#breadcrumb p').each(function(){
     	jQuery(this).css('opacity',opacityMax-(opStep*iter)+'');
         jQuery(this).css('font-size', Math.floor(fontsizeMax-(ftStep*iter))+'px');
-
-
-
         iter++;
     });
 }
@@ -2580,6 +2622,12 @@ xpd.viz.contentpane.factorForReview = function (review) {
     var JQ_renderedReview = jQuery(jQuery('#reviewExpanded').render(review));
     if(!review.writable){
         JQ_renderedReview.find(".vdvw-delete-button").remove();
+    }
+    var JQ_tagsContainer = JQ_renderedReview.find(".tagsContainer");
+    if(review.tags){
+        review.tags.each(function(v,k){
+            JQ_tagsContainer.append('<span class="xpd-tag">' + v.tag + '</span>');
+        });
     }
     return JQ_renderedReview;
 }
@@ -2597,8 +2645,16 @@ xpd.viz.contentpane.addCommentsToReview = function(jq_review, mappedComments){
     });
     return JQ_reviewDiv;
 }
-xpd.viz.contentpane.factorForComment = function (bookWithUser) { 
-    return jQuery('#commentExpanded').render(bookWithUser);
+xpd.viz.contentpane.factorForComment = function (comment) { 
+    var rr = jQuery('#commentExpanded').render(comment);
+    var JQ_comment = jQuery(rr);
+    var JQ_tagsContainer = JQ_comment.find(".tagsContainer");
+    if(comment.tags){
+        comment.tags.each(function(v,k){
+            JQ_tagsContainer.append('<span class="xpd-tag">' + v.tag + '</span>');
+        });
+    }
+    return JQ_comment;
 }
 xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
     var JQ_selectedComment = null;
@@ -2627,7 +2683,7 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
         var selectedReviewCommentsContainerChildren = JQ_selectedReview.find(".commentsContainer").children();
         while(iter<selectedReviewCommentsContainerChildren.length){
             var commentDiv = selectedReviewCommentsContainerChildren[iter];
-            var JQ_commentDiv = jQuery(commentDiv)
+            var JQ_commentDiv = jQuery(commentDiv);
             if(vdvw.c.identify(JQ_commentDiv.attr("id")).id == commentIdNullable){
                     JQ_selectedComment = JQ_commentDiv;
                     //todo change comment background

@@ -122,6 +122,7 @@ body {margin-top:0;}
             </div>
             <div>
                 <div class="reviewBody">{{=content!}}</div>
+                <div class="tagsContainer"></div>
             </div>
             <div class="commentsContainer">
             </div>
@@ -145,6 +146,7 @@ body {margin-top:0;}
             </div>
             <div>
                 <div class="commentBody">{{=content!}}</div>
+                <div class="tagsContainer"></div>
             </div>
         </div>
     </script>
@@ -432,6 +434,7 @@ body {margin-top:0;}
                             <input 	id="locMa" 	type="hidden" 	title="locMa"        class="send"       />
                             <input 	id="locNa" 	type="hidden" 	title="locNa"        class="send"       />
                         </fieldset>
+                        <span>Tags: </span><span id="tagsContainer"</span>
                     </td>
                 </tr>
                 <tr>
@@ -449,27 +452,44 @@ body {margin-top:0;}
         </div>
     </script>
     <script id="drpAddCommentTPL" type="text/x-jquery-tmpl">
-        <div title="comment on this review:" class="drpDialog" style="width: 1000px">
+        <div title="comment on this review:" class="drpDialog" style="width: 950px">
             <div class="formWrap">
-                <div class="errorText" style="width:380px">Enter the location your comment relates to:</div>
-                <div>
-                    <input id="address" type="textbox" value="Streetname, Cityname, Countryname" style="width: 350px" onfocus="this.select()" onblur="this.value=!this.value?'Streetname, Cityname, Countryname':this.value;" value="Streetname, Cityname, Countryname">
-                    <input type="button" value="find" onclick="drp.test.codeAddress('comment')">
-                </div>
-                <div id="drpPlacePicker" style="width: 350px"></div>
-                <div id="drpMapCanvas" style="width: 420px; height: 300px"></div>
-            </div>
-            <div class="formWrap">
-                <fieldset class="drpAddCommentForm">
-                    <span>Title: </span><input 	id="commentHeader"          type="text"     title="commentHeader"        class="send"	/>
-                    <span>Text: </span><textarea 	id="commentBody"            type="text"     title="commentBody"         class="send texteditor basic"	style="height:280px; width: 560px"/>
-                    <input 	id="commentedEntityId"      type="hidden"   title="commentedEntityId"   class="send"    value="{{=commentedEntityId}}"	/>
-                    <input 	id="commentedEntityType"    type="hidden"   title="commentedEntityType" class="send"    value="{{=commentedEntityType}}"	/>
-                    <input 	id="locMa" 	type="hidden" 	title="locMa"        class="send"       />
-                    <input 	id="locNa" 	type="hidden" 	title="locNa"        class="send"       />
-                    <p><span class="errorText2"></span></p>
-                    <button id="submitComment">SUBMIT COMMENT</button>
-                </fieldset>
+                <table>
+                    <tr>
+                        <td colspan="2">
+                            <div class="errorText" style="width:380px">Enter the location your comment relates to:</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 10px; padding-bottom: 10px;">
+                            <div>
+                                <input id="address" type="textbox" value="Streetname, Cityname, Countryname" style="width: 350px" onfocus="this.select()" onblur="this.value=!this.value?'Streetname, Cityname, Countryname':this.value;" value="Streetname, Cityname, Countryname">
+                                <input type="button" value="find" onclick="drp.test.codeAddress('comment')">
+                            </div>
+                        </td>
+                        <td>
+                            <span>Title: </span><input 	id="commentHeader"    style="width: 400px;"      type="text"     title="commentHeader"        class="send"	/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >
+                            <div id="drpPlacePicker" style="width: 350px;"></div>
+                            <div id="drpMapCanvas" style="width: 420px; height: 300px;  top:6px"></div>
+                        </td>
+                        <td>
+                            <fieldset class="drpAddCommentForm">
+                                <textarea 	id="commentBody"            type="text"     title="commentBody"         class="send texteditor basic"	style="height:280px; width: 560px"></textarea>
+                                <input 	id="commentedEntityId"      type="hidden"   title="commentedEntityId"   class="send"    value="{{=commentedEntityId}}"	/>
+                                <input 	id="commentedEntityType"    type="hidden"   title="commentedEntityType" class="send"    value="{{=commentedEntityType}}"	/>
+                                <input 	id="locMa" 	type="hidden" 	title="locMa"        class="send"       />
+                                <input 	id="locNa" 	type="hidden" 	title="locNa"        class="send"       />
+                                <p><span class="errorText2"></span></p>
+                            </fieldset>
+                            <span>Tags: </span><span id="tagsContainer"</span><br/>
+                            <button id="submitComment">SUBMIT COMMENT</button>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </script>

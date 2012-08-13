@@ -630,6 +630,23 @@ drp.test.addReviewDialog = function(reviewedBookId){
                                 var dl = drp.createDialog(jQuery('#drpAddReviewTPL').render({
                                     reviewedBookId:reviewedBookId
                                 }));
+                                var JQ_tagsCont = dl.find("#tagsContainer");
+                                var tagTab = xpd.db.table(xpd.Tag.EntityName());
+                                $H(tagTab.records).each(function(r){
+                                    var JQ_tagCont = jQuery("<span class='xpd-tag'></span>");
+                                    JQ_tagCont.text(r.value.tag);
+                                    JQ_tagCont.attr("title",r.value.description);
+                                    var JQ_checkbox = jQuery("<input type='checkbox'></input>");
+                                    JQ_checkbox.attr("id",r.value.id);
+                                    JQ_tagCont.prepend(JQ_checkbox);
+                                    JQ_tagsCont.append(JQ_tagCont);
+                                });
+                                JQ_tagsCont.find("input").click(function(event){
+                                    if(JQ_tagsCont.find("input:checked").length > 3){
+                                        alert("Maximum of tags per item is three. You must uncheck another tag first.");
+                                        jQuery(event.target).removeAttr("checked");
+                                    }
+                                });
                                 jQuery(".errorText").hide();
                                 jQuery(".errorText2").hide();
                                 map = new google.maps.Map(jQuery( '#drpMapCanvas' )[0], myOptions);
@@ -666,6 +683,11 @@ drp.test.addReviewDialog = function(reviewedBookId){
                                                 header : jQuery(".drpAddReviewForm #reviewHeader").val(),
                                                 body : jQuery(".drpAddReviewForm #reviewBody").val()
                                             };
+                                            rev.sharedTag = [];
+                                            var selectedTags = jQuery(".drpAddReviewForm .xpd-tag input:checked");
+                                            selectedTags.each(function(k,v){
+                                                rev.sharedTag.push(jQuery(v).attr("id"));
+                                            });
                                             var locComm = drp.tr.comm.submitLocation(loc);
                                             drp.postTR(
                                                 {
@@ -745,11 +767,28 @@ drp.test.addCommentDialog = function(commentedEntityId, commentedEntityType){
                                 commentedEntityId:commentedEntityId, 
                                 commentedEntityType:commentedEntityType
                             }));
+                            var JQ_tagsCont = dl.find("#tagsContainer");
+                            var tagTab = xpd.db.table(xpd.Tag.EntityName());
+                            $H(tagTab.records).each(function(r){
+                                var JQ_tagCont = jQuery("<span class='xpd-tag'></span>");
+                                JQ_tagCont.text(r.value.tag);
+                                JQ_tagCont.attr("title",r.value.description);
+                                var JQ_checkbox = jQuery("<input type='checkbox'></input>");
+                                JQ_checkbox.attr("id",r.value.id);
+                                JQ_tagCont.prepend(JQ_checkbox);
+                                JQ_tagsCont.append(JQ_tagCont);
+                            });
+                            JQ_tagsCont.find("input").click(function(event){
+                                if(JQ_tagsCont.find("input:checked").length > 3){
+                                    alert("Maximum of tags per item is three. You must uncheck another tag first.");
+                                    jQuery(event.target).removeAttr("checked");
+                                }
+                            });
                             jQuery(".errorText").hide();
                             jQuery(".errorText2").hide();
                             map = new google.maps.Map(jQuery( '#drpMapCanvas' )[0], myOptions);
                             map.mapTypes.set('expodium2', expodiumMapType2);
-                            jQuery(".drpAddCommentForm #submitComment").click(function(e){
+                            jQuery(dl).find("#submitComment").click(function(e){
                                 if(jQuery(".drpAddCommentForm #locMa").val() == "" || jQuery(".drpAddCommentForm #locNa").val() == ""){
                                     //alert("What on earth are you writing about? Pick a location so we can show it on the map.");
                                     jQuery(".errorText").hide();
@@ -762,7 +801,7 @@ drp.test.addCommentDialog = function(commentedEntityId, commentedEntityType){
                                         Na : jQuery(".drpAddCommentForm #locNa").val()
                                     };
                                     // are all fields filled out?
-                                    if(jQuery(".drpAddCommentForm #commentHeader").val() == "" || jQuery(".drpAddCommentForm #commentBody").val() == ""){
+                                    if(jQuery(dl).find("#commentHeader").val() == "" || jQuery(".drpAddCommentForm #commentBody").val() == ""){
 
                                         jQuery(".errorText2").empty();
                                         jQuery(".errorText2").hide();
@@ -770,11 +809,16 @@ drp.test.addCommentDialog = function(commentedEntityId, commentedEntityType){
                                         jQuery(".errorText2").fadeIn();
                                     } else {
                                         var comment = {
-                                            header : jQuery(".drpAddCommentForm #commentHeader").val(),
+                                            header : jQuery(dl).find("#commentHeader").val(),
                                             body : jQuery(".drpAddCommentForm #commentBody").val(),
                                             commentedEntityType : jQuery(".drpAddCommentForm #commentedEntityType").val(),
                                             commentedEntityId: jQuery(".drpAddCommentForm #commentedEntityId").val()
                                         };
+                                        comment.sharedTag = [];
+                                        var selectedTags = jQuery(dl).find(".xpd-tag input:checked");
+                                        selectedTags.each(function(k,v){
+                                            comment.sharedTag.push(jQuery(v).attr("id"));
+                                        });
                                         var locComm = drp.tr.comm.submitLocation(loc);
                                         drp.postTR(
                                             {
