@@ -2010,6 +2010,12 @@ vdvw.c.onCmsClick=function(event){
 vdvw.c.onTagsClick=function(event){
     drp.test.tagsDialog();
 }
+vdvw.c.soundCloudInit = function(){
+	SC.initialize({
+    	client_id: "e22560b336fd3bd57923bf448233323c",
+    	redirect_uri: document.location.href,
+  	});
+};
 vdvw.c.dataRefresh = function(type,id){
     drp.postTR({id:"getData",comm:[drp.tr.comm.getData()]}, function(rsp){
         xpd.flush.clearMap();

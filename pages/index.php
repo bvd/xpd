@@ -50,6 +50,8 @@ body {margin-top:0;}
         <script type="text/javascript" src="app/js/ext/infobox.js"></script>
         <script type="text/javascript" src="app/js/ext/markerwithlabel.js"></script>
         <script type="text/javascript" src="app/js/ext/v3_epoly_proj.js"></script>
+        <!-- SCL -->
+        <script src="http://connect.soundcloud.com/sdk.js"></script>
         <!-- JQR -->
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         <script type="text/javascript" src="app/js/ext/jquery-ui.js"></script>
