@@ -2484,11 +2484,13 @@ vdvw.c.VisualizeActionsForUserId = function(userId){
         vdvw.c.VisualizeComment(comment);
     });
 }
-vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter){
+vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter,drawCommentToCommenterLine){
     var icon = xpd.viz.icon.factorForComment(mappedComment);
     var comMarker = xpd.viz.drawIcon(icon, mappedComment.type, mappedComment.id);
-    var lineFromLocation = new google.maps.LatLng(mappedComment.ownerMa, mappedComment.ownerNa); 
-    var line = xpd.viz.drawLine('#688', lineFromLocation, comMarker.getPosition(), false, 1);
+    if(drawCommentToCommenterLine){
+        var lineFromLocation = new google.maps.LatLng(mappedComment.ownerMa, mappedComment.ownerNa); 
+        var line = xpd.viz.drawLine('#688', lineFromLocation, comMarker.getPosition(), false, 1);
+    }
     xpd.viz.drawBreadCrumb(jQuery("#commentByUser").render(mappedComment));
     if(visualizeCommenter){
         vdvw.c.VisualizeUserOnTheMap(mappedComment.ownerId);
@@ -2647,7 +2649,7 @@ vdvw.c.VisualizeItemsForTagId = function(id){
         vdvw.c.VisualizeReview(v, false, false);
     });
     coms.each(function(v){
-        vdvw.c.VisualizeComment(v, false);
+        vdvw.c.VisualizeComment(v, false, false);
     });
 }
 /**
