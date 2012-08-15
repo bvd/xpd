@@ -909,8 +909,36 @@ drp.test.deleteDialog = function(obj){
     });
 }
 drp.test.settingsDialog = function(mappedUser){
+    // render the dialog with the first tab (user data)
     var dl = drp.createDialog(jQuery('#drpUserSettingsDialogTPL').render(mappedUser));
     jQuery( "#tabs" ).tabs();
+    // render and populate the reviews table into the second tab
+    var rvTab = jQuery('#drpUserReviewsTabTPL').render({});
+    var JQ_rvTab = jQuery(rvTab);
+    var rvs = xpd.Mappers.getReviewsForBookOwner(mappedUser.id);
+    rvs.each(function(v){
+        var mappedReview = xpd.Mappers.getMappedReviewForReview(v);
+        var tRow = jQuery("#drpUserReviewsTabRowTPL").render(mappedReview);
+        JQ_rvTab.children().eq(0).after(tRow);
+    });
+    jQuery(dl).find("#tabs-2").children().first().replaceWith(JQ_rvTab);
+    JQ_rvTab.find("input[type=button]").click(function(event){
+        jQuery(dl).dialog('close');
+        vdvw.c.onClick.call(event.target,event);
+    });
+    // render and ... comments table ... third tab
+    var cmTab = jQuery('#drpUserCommentsTabTPL').render({});
+    var JQ_cmTab = jQuery(cmTab);
+    var cms = xpd.Mappers.getCommentsForUser(mappedUser.id);
+    cms.each(function(v){
+        var tRow = jQuery("#drpUserCommentsTabRowTPL").render(v);
+        JQ_cmTab.children().eq(0).after(tRow);
+    });
+    jQuery(dl).find("#tabs-3").children().first().replaceWith(JQ_cmTab);
+    JQ_cmTab.find("input[type=button]").click(function(event){
+        jQuery(dl).dialog('close');
+        vdvw.c.onClick.call(event.target,event);
+    });
 }
 /**
  * DIALOG HELPERS

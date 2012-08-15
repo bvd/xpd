@@ -552,6 +552,34 @@ body {margin-top:0;}
             </div>
         </div>
     </script>
+    <script id="drpUserReviewsTabTPL" type="text/x-jquery-tmpl">
+        <table>
+            <tr>
+                <th style="text-align: left; width:800px;">review-head</th>
+                <th style="text-align: left; width:100px;">view</th>
+            </tr>
+        </table>
+    </script>
+    <script id="drpUserReviewsTabRowTPL" type="text/x-jquery-tmpl">
+        <tr>
+            <td>{{=head}}</td>
+            <td><input type="button" value="SHOW" id="fcf-{{=type}}-{{=id}}" onclick="vdvw.c.onClick"/></td>
+        </tr>
+    </script>
+    <script id="drpUserCommentsTabTPL" type="text/x-jquery-tmpl">
+        <table>
+            <tr>
+                <th style="text-align: left; width:800px;">comment-head</th>
+                <th style="text-align: left; width:100px;">view</th>
+            </tr>
+        </table>
+    </script>
+    <script id="drpUserCommentsTabRowTPL" type="text/x-jquery-tmpl">
+        <tr>
+            <td>{{=head}}</td>
+            <td><input type="button" value="SHOW" id="fcf-{{=type}}-{{=id}}"/></td>
+        </tr>
+    </script>
     <script id="loginNameTPL" type="text/x-jquery-tmpl">
         <span>settings for {{=name}}</span>
     </script>
