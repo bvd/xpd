@@ -647,15 +647,17 @@ drp.test.addReviewDialog = function(reviewedBookId){
                                 }));
                                 var JQ_tagsCont = dl.find("#tagsContainer");
                                 var tagTab = xpd.db.table(xpd.Tag.EntityName());
-                                $H(tagTab.records).each(function(r){
-                                    var JQ_tagCont = jQuery("<span class='xpd-tag'></span>");
-                                    JQ_tagCont.text(r.value.tag);
-                                    JQ_tagCont.attr("title",r.value.description);
-                                    var JQ_checkbox = jQuery("<input type='checkbox'></input>");
-                                    JQ_checkbox.attr("id",r.value.id);
-                                    JQ_tagCont.prepend(JQ_checkbox);
-                                    JQ_tagsCont.append(JQ_tagCont);
-                                });
+                                if(tagTab){
+                                    $H(tagTab.records).each(function(r){
+                                        var JQ_tagCont = jQuery("<span class='xpd-tag'></span>");
+                                        JQ_tagCont.text(r.value.tag);
+                                        JQ_tagCont.attr("title",r.value.description);
+                                        var JQ_checkbox = jQuery("<input type='checkbox'></input>");
+                                        JQ_checkbox.attr("id",r.value.id);
+                                        JQ_tagCont.prepend(JQ_checkbox);
+                                        JQ_tagsCont.append(JQ_tagCont);
+                                    });
+                                }
                                 JQ_tagsCont.find("input").click(function(event){
                                     if(JQ_tagsCont.find("input:checked").length > 3){
                                         alert("Maximum of tags per item is three. You must uncheck another tag first.");
