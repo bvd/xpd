@@ -39,8 +39,15 @@ drp.tr.comm.SessionLoginForLoginNameAndResponse = function(loginName, response){
 drp.tr.comm.UserResetPasswd = function(mail){
 	return drp.tr.comm.comm("user:resetPassword",[mail]);
 }
+// password reset mail opvragen
+drp.tr.comm.UserResetEmail = function(email){
+	return drp.tr.comm.comm("user:resetEmail",[email]);
+}
 // gebruikersnaam voor password reset token opvragen
 drp.tr.comm.GetUserNameForPasswordReset = function(token){
+	return drp.tr.comm.comm("userinvite:userNameForToken",[token]);
+}
+drp.tr.comm.GetUserNameForEmailReset = function(token){
 	return drp.tr.comm.comm("userinvite:userNameForToken",[token]);
 }
 drp.tr.comm.SubmitNewPassword = function(token,passwdhash){
@@ -62,6 +69,9 @@ drp.tr.comm.SessionNukeDataBase = function(){
 // ---stap 1: rol id ophalen voor moderator
 drp.tr.comm.RoleReadForRoleName = function(roleName){
 	return drp.tr.comm.comm("role:find",[["id","name"],[{name:roleName}]]);
+}
+drp.tr.comm.mailAdresForUid = function(uid){
+    return drp.tr.comm.comm("user:load",[uid]);
 }
 drp.tr.comm.addBook = function (bookUnique){
     return drp.tr.comm.comm("book:store",[{"pending":0,"bookUnique":bookUnique}]);

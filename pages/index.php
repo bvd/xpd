@@ -217,10 +217,50 @@ body {margin-top:0;}
             </fieldset>
         </div>
     </script>
+    <script id="drpResetEmailTPL" type="text/x-jquery-tmpl">
+        <div title="reset email address" class="drpDialog" style="width:500px;">
+            <fieldset class="drpResetEmailForm">
+                <div class="errorText"></div>
+                <p>You should now supply us with your new email address. We will never use this address on our own initiative however we must make sure it is a working address, because you will need it in case you might forget your password. Therefore we will send you a verification email that you should open, to complete the process of changing your email address.</p>
+                <table>
+                    <tr>
+                        <td>
+                            <span>old address to be replaced: </span>
+                        </td>
+                        <td>
+                            <input id ="oldEmailAddress" title="old email address" type="text" disabled="disabled" value="{{=oldAddress}}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>type your new email address:</span>
+                        </td>
+                        <td>
+                            <input id="newEmailAddress" title="new email address" type="text"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>click to receive an email and then open it to complete the email reset.</td>
+                        <td style="text-align: right;">
+                            <input type="hidden" id="uid" value="{{=uid}}"/>
+                            <input type="button" id="submit" value="RESET EMAIL"/>
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+    </script>
     <script id="drpMailSentForResetPasswordDialogTPL" type="text/x-jquery-tmpl">
         <div title="great success" class="drpDialog">
             <fieldset class="drpMailSentForResetPasswordDialogForm">
                 <span>An email has been sent. You can now click the link in the email to reset your password. If you think the mail did not come, check your spam box.</span><br/>
+            </fieldset>
+        </div>
+    </script>
+    <script id="drpMailSentForResetEmailDialogTPL" type="text/x-jquery-tmpl">
+        <div title="great success" class="drpDialog">
+            <fieldset class="drpMailSentForResetEmailDialogForm">
+                <span>The verification e-mail was successfully sent. Go to your mailbox and click the link in your verification email to complete the e-mail reset process. If you think the mail did not come, check your spam box.</span><br/>
             </fieldset>
         </div>
     </script>
@@ -239,6 +279,14 @@ body {margin-top:0;}
                 <input 	id="password" 	type="text" 	title="newPassword"        class="send"	/>
                 <input 	id="token" 	type="hidden" 	title="token"        class="send"       />
                 <button id="submitNewPassword">RESET</button>
+            </fieldset>
+        </div>
+    </script>
+    <script id="drpSubmitNewEmailTPL" type="text/x-jquery-tmpl" >
+        <div title="great success" class="drpDialog">
+            <span>The change of your e-mail address has been completed successfully.</span>
+            <fieldset class="drpSubmitNewEmailForm">
+                <button id="submit">THANKS</button>
             </fieldset>
         </div>
     </script>
@@ -538,7 +586,7 @@ body {margin-top:0;}
                         </tr>
                         <tr>
                             <td><span>e-mail</span></td>
-                            <td><span><a>show email</a></span></td>
+                            <td><span><a id="show-email">show e-mail</a></span></td>
                             <td><span>Use it when you forgot your password or username.</span></td>
                         </tr>
                     </table>
@@ -602,11 +650,14 @@ body {margin-top:0;}
         </tr>
     </script>
     <script type="text/javascript">
+        
         var RunAfterInit = [];
 <?php if (isset($_GET['userInvite'])): ?>
-                            RunAfterInit.push({func: drp.test.createSubscriptionDialog, args:["<?php echo $_GET['userInvite']; ?>"]});
+        RunAfterInit.push({func: drp.test.createSubscriptionDialog, args:["<?php echo $_GET['userInvite']; ?>"]});
 <?php elseif (isset($_GET['userInviteResetPassword'])): ?>
-                            RunAfterInit.push({func: drp.test.submitNewPasswordDialog, args:["<?php echo $_GET['userInviteResetPassword']; ?>"]});
+        RunAfterInit.push({func: drp.test.submitNewPasswordDialog, args:["<?php echo $_GET['userInviteResetPassword']; ?>"]});
+<?php elseif (isset($_GET['userInviteResetEmail'])): ?>
+        RunAfterInit.push({func: drp.test.submitNewEmailDialog, args:["<?php echo $_GET['userInviteResetEmail']; ?>"]});
 <?php endif; ?>
     </script>
 

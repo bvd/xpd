@@ -306,6 +306,21 @@ drp.test.submitNewPasswordDialog = function(token){
         );
     });
 }
+drp.test.submitNewEmailDialog = function(token){
+    drp.postTR(
+        {
+            id:"getUserNameForEmailReset",
+            comm:[drp.tr.comm.GetUserNameForEmailReset(token)]
+        }, 
+        function(rsp){
+            var username = rsp.getUserNameForEmailReset.result;
+            var dl = drp.createDialog(jQuery('#drpSubmitNewEmailTPL').render({ }));
+            jQuery(".drpSubmitNewEmailForm #submit").click(function(e){
+                jQuery(dl).dialog('close');
+            }
+        );
+    });
+}
 drp.test.createLogoutDialog = function(){
     var dl = drp.createDialog(jQuery('#drpLogoutTPL').render({}));
     jQuery(".drpLogoutForm #logout").click(function(e){
@@ -695,7 +710,7 @@ drp.test.addReviewDialog = function(reviewedBookId){
                                             jQuery(".errorText2").hide();
                                             jQuery(".errorText2").append("One of the textfields above is empty!");
                                             jQuery(".errorText2").fadeIn();
-                                        } else {
+                                        }else {
                                             var rev = {
                                                 header : jQuery(".drpAddReviewForm #reviewHeader").val(),
                                                 body : jQuery(".drpAddReviewForm #reviewBody").val()
@@ -908,10 +923,45 @@ drp.test.deleteDialog = function(obj){
         );
     });
 }
+drp.test.changeEmailAddressDialog = function(uid,mailAddress){
+    var dl = drp.createDialog(jQuery('#drpResetEmailTPL').render({oldAddress:mailAddress,uid:uid}));
+    jQuery(".errorText").hide();
+    jQuery(".errorText").empty();
+    jQuery(".drpResetEmailForm #submit").click(function(e){
+        var newmail = jQuery(".drpResetEmailForm #newEmailAddress").val();
+        var comm = drp.tr.comm.UserResetEmail(newmail);
+        jQuery(dl).dialog('close');
+        drp.postTR({
+            id:"resetEmail",
+            comm:[comm]
+            }, 
+            function(rsp){
+                var dl = drp.createDialog(jQuery('#drpMailSentForResetEmailDialogTPL').render({}));
+            }
+        );
+    });
+}
 drp.test.settingsDialog = function(mappedUser){
     // render the dialog with the first tab (user data)
     var dl = drp.createDialog(jQuery('#drpUserSettingsDialogTPL').render(mappedUser));
     jQuery( "#tabs" ).tabs();
+    // add functionality to change email
+    dl.find("#show-email").css({"cursor":"pointer","text-decoration":"underline"});
+    dl.find("#show-email").click(function(event){
+        drp.postTR(
+            {id:"getmail",comm:[drp.tr.comm.mailAdresForUid(mappedUser.id)]},
+            function(rsp){
+                var mailAddress = rsp.getmail.result.mail;
+                var uid = rsp.getmail.result.id;
+                var JQ_mailLink = jQuery("<div>"+mailAddress+" <a style='text-decoration:underline;cursor:pointer;'>edit</a></div>");
+                dl.find("#show-email").replaceWith(JQ_mailLink);
+                JQ_mailLink.find("a").click(function(event){
+                    jQuery(dl).dialog('close');
+                    drp.test.changeEmailAddressDialog(uid,mailAddress);
+                })
+            }
+        );
+    });
     // render and populate the reviews table into the second tab
     var rvTab = jQuery('#drpUserReviewsTabTPL').render({});
     var JQ_rvTab = jQuery(rvTab);
