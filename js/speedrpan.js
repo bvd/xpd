@@ -1255,22 +1255,18 @@ drp.displayDialogOrPanel = function(templateString,opts){
         jQuery(value).ckeditor();
         editorIDS.push(value.id);
     });
-    var parent = jQuery(".drpDialog");
-    if(parent.length > 1){
-        alert("error number 1338927595");
-    }else{
-        jQuery(".help").each(function(index,value){
-            var jqVal = jQuery(value);
-            if(parent.find(jqVal).length > 0){
-                jqVal.css("cursor","pointer");
-                jqVal.click(function(e){
-                    var child = vdvw.c.openHelpForId(jqVal.attr('id'));
-                    jQuery('#faq-wrap').addClass("dialogChild");
-                    jQuery('#faq-wrap').css('zIndex', 9999);
-                });
-            }
-        });
-    }   
+    var parent = jQuery(".ui-dialog-title");
+    jQuery(".help").each(function(index,value){
+        var jqVal = jQuery(value);
+        if(parent.find(jqVal).length > 0){
+            jqVal.css("cursor","pointer");
+            jqVal.click(function(e){
+                var child = vdvw.c.openHelpForId(jqVal.attr('id'));
+                jQuery('#faq-wrap').addClass("dialogChild");
+                jQuery('#faq-wrap').css('zIndex', 9999);
+            });
+        }
+    }); 
     dl.data("editors", editorIDS);
     // toggle about
     if(xpd.viewState.toggleAbout){
