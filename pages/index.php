@@ -158,16 +158,36 @@ body {margin-top:0;}
     <script id="cmsPanelTPL" type="text/x-jquery-tmpl">
         <div title="lasagna management system"  id="cms-panel" class="drpPanel" style="width: 1000px">
             <div id="cms-mainMenu">
-                <ul>
-                    <li><a>book</a></li>
-                    <li><a>question</a></li>
-                    <li><a>user</a></li>
-                    <li><a>review</a></li>
-                    <li><a>comment</a></li>
-                    <li><a>tag</a></li>
-                </ul>
+                <div style="float:left;">
+                    <span>click a type to edit items:</span>
+                    <ul>
+                        <li><a>book</a></li>
+                        <li><a>question</a></li>
+                        <li><a>user</a></li>
+                        <li><a>review</a></li>
+                        <li><a>comment</a></li>
+                        <li><a>tag</a></li>
+                    </ul>
+                </div>
+                <div style="float:left; margin-left: 50px; width:700px;">
+                    <span>or click a button to add an item</span>
+                    <ul>
+                        <li>
+                            <button id="createModerator"          onclick="drp.test.createModeratorDialog()">CREATE MODERATOR</button>
+                        </li>
+                        <li>
+                            <button id="addBook"                  onclick="drp.test.addBookDialog()">ADD BOOK</button>
+                        </li>
+                        <li>
+                            <button id="addQuestion"              onclick="drp.test.addQuestionDialog()">ADD QUESTION</button>
+                        </li>
+                        <li>
+                            <button id="addTag"                   onclick="drp.test.addTagDialog()">ADD TAG</button>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div id="cms-itemsList" style="height: 500px; overflow:auto;">
+            <div id="cms-itemsList" style="height: 500px; overflow:auto; clear:both">
                 <p>click a type to show items</p>
             </div>
             <div id="cms-fieldsList" style="height: 400px; display: none; overflow:auto;">
@@ -535,10 +555,16 @@ body {margin-top:0;}
                                 <input 	id="locNa" 	type="hidden" 	title="locNa"        class="send"       />
                                 <p><span class="errorText2"></span></p>
                             </fieldset>
-                            <span>Tags: </span><span id="tagsContainer"</span><br/>
-                            <button id="submitComment">SUBMIT COMMENT</button>
+                            <div style="margin-left: 20px;">
+                                <span>Tags: </span>
+                                <div id="tagsContainer"</div>
+                            </div>
                         </td>
                     </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right;">
+                            <button id="submitComment">SUBMIT COMMENT</button>
+                        </td>
                 </table>
             </div>
         </div>
@@ -660,43 +686,7 @@ body {margin-top:0;}
         RunAfterInit.push({func: drp.test.submitNewEmailDialog, args:["<?php echo $_GET['userInviteResetEmail']; ?>"]});
 <?php endif; ?>
     </script>
-
-
-
-
-
-
-
-
-
-
-    <!-- test buttons (tmp)-->	
-    <!-- test buttons (tmp)-->	
-    <!-- test buttons (tmp)-->	
-
 </head>
 <body onload="new vdvw.c.Startup()">
-
-<?php if (!(isset($_GET["testbuttons"]))) echo "<!--"; ?>   
-    <div style="left: 400px; position: relative; z-index: 50000">
-        <button id="nukeDialog"               onclick="drp.test.nukeDialog()">TEST NUKE</button>
-        <button id="loginDialog"              onclick="drp.test.loginDialog()">TEST LOGIN</button>
-        <button id="createModerator"          onclick="drp.test.createModeratorDialog()">CREATE MODERATOR</button>
-        <br/>
-        <button id="addBook"                  onclick="drp.test.addBookDialog()">ADD BOOK</button>
-        <button id="addQuestion"              onclick="drp.test.addQuestionDialog()">ADD QUESTION</button>
-        <button id="receivedBook"             onclick="drp.test.receivedBookDialog()">RECEIVED BOOK</button>
-        <button id="testAccountSubscription"  onclick="drp.test.poseQuestionDialog('What is your favourite green colour?',1)">TEST BOOK QUESTION</button>
-        <br/>
-        <button id="createSubscription"       onclick="drp.test.createSubscriptionDialog()">TEST ACCOUNT SUBSCRIPTION</button>
-        <button id="addReview"                onclick="drp.test.addReviewDialog(1)">TEST ADD REVIEW</button>
-        <button id="addComment"               onclick="drp.test.addCommentDialog('review',1)">TEST ADD COMMENT</button>
-        <br/>
-        <button id="explainSendBook"          onclick="drp.test.explainSendBook()">EXPLAIN SEND BOOK</button>
-        <button id="sendBook"                 onclick="drp.test.sendBook()">SEND BOOK</button>
-        <button id="addTag"                   onclick="drp.test.addTagDialog()">ADD TAG</button>
-    </div><?php if (!(isset($_GET["testbuttons"]))) echo "-->"; ?>   
-
-
 </body>
 </html>

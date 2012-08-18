@@ -423,6 +423,7 @@ drp.test.addTagDialog = function(){
         },
         function(rsp){
             jQuery(dl).dialog('close');
+            vdvw.c.dataRefresh();
         });
     });
 }
@@ -802,7 +803,7 @@ drp.test.addCommentDialog = function(commentedEntityId, commentedEntityType){
                             var JQ_tagsCont = dl.find("#tagsContainer");
                             var tagTab = xpd.db.table(xpd.Tag.EntityName());
                             $H(tagTab.records).each(function(r){
-                                var JQ_tagCont = jQuery("<span class='xpd-tag'></span>");
+                                var JQ_tagCont = jQuery("<div class='xpd-tag' style='float:left;'></div>");
                                 JQ_tagCont.text(r.value.tag);
                                 JQ_tagCont.attr("title",r.value.description);
                                 var JQ_checkbox = jQuery("<input type='checkbox'></input>");
@@ -1254,8 +1255,8 @@ drp.displayDialogOrPanel = function(templateString,opts){
         jQuery(value).ckeditor();
         editorIDS.push(value.id);
     });
-    var parent = jQuery(".ui-dialog-title");
-    if(parent.length != 1){
+    var parent = jQuery(".drpDialog");
+    if(parent.length > 1){
         alert("error number 1338927595");
     }else{
         jQuery(".help").each(function(index,value){
