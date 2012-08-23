@@ -2430,10 +2430,12 @@ vdvw.c.VisualizeCurrentBooks = function(){
 }
 vdvw.c.ShowBookLocations = function(){
     var booksWithUsers = xpd.Mappers.getBooksAtCurrentLocations();
-    booksWithUsers.each(function(bookWithUser){
-        var icon = xpd.viz.icon.factorForBookWithUserDrop(bookWithUser);
-        xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookWithUser.ownerId);
-    });
+    if(booksWithUsers){
+        booksWithUsers.each(function(bookWithUser){
+            var icon = xpd.viz.icon.factorForBookWithUserDrop(bookWithUser);
+            xpd.viz.drawIcon(icon, xpd.User.EntityName(), bookWithUser.ownerId);
+        });
+    }
 }
 vdvw.c.ShowBookLocationSelected = function(selectId){
     var bk = xpd.Mappers.getBookAtCurrentLocationForId(selectId);
