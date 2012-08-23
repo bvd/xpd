@@ -532,77 +532,92 @@ drp.test.mailSentForRegisterDialog = function(){
     var dl = drp.createDialog(jQuery('#drpMailSentForRegisterDialogTPL').render({}));
 } 
 drp.test.createSubscriptionDialog = function(token){
-    var dl = drp.createDialog(jQuery('#drpCreateSubscriptionTPL').render({}));
-    jQuery(".errorText").hide();
-    jQuery(".errorText2").hide();
-    jQuery(".drpCreateSubscriptionForm #token").val(token);
-    // Initialize Google Map
-    map = new google.maps.Map(jQuery( '#drpMapCanvas' )[0], myOptions);
-    map.mapTypes.set('expodium2', expodiumMapType2);    
-    jQuery(".drpCreateSubscriptionForm #submitSubscription").click(function(e){
-        if(jQuery(".drpCreateSubscriptionForm #locMa").val() == "" || jQuery(".drpCreateSubscriptionForm #locNa").val() == ""){
-            //alert("you need to pick a location for your residence to create an account");
+    drp.postTR(
+        {
+            id:"logout",
+            comm:[drp.tr.comm.logout()]
+        },
+        function(rsp){
+            vdvw.m.Session.setUid("-1");
+            jQuery(dl).dialog('close');
+            jQuery("#logout-link").hide();
+            jQuery("#login-link").show();
+            jQuery("#login-name").hide();
+            jQuery("#cms-link").hide();
             
-            jQuery(".errorText").empty();
-            jQuery(".errorText").hide();
-            jQuery(".errorText").append('You need to pick a location for your residence to create an account');
-            jQuery(".errorText").fadeIn();
-            
-        }
-        if(jQuery(".drpCreateSubscriptionForm #loginName").val() == "" || jQuery(".drpCreateSubscriptionForm #mail").val() == "" || jQuery(".drpCreateSubscriptionForm #userName").val() == "" || jQuery(".drpCreateSubscriptionForm #password").val() == ""){
-            //alert("complete all fields fool");
-            jQuery(".errorText2").empty();
-            jQuery(".errorText2").hide();
-            jQuery(".errorText2").append('You need to complete all fields');
-            jQuery(".errorText2").fadeIn();
-        }else{
+            var dl = drp.createDialog(jQuery('#drpCreateSubscriptionTPL').render({}));
             jQuery(".errorText").hide();
             jQuery(".errorText2").hide();
-            var location = {
-                Ma: jQuery(".drpCreateSubscriptionForm #locMa").val(),
-                Na: jQuery(".drpCreateSubscriptionForm #locNa").val()
-            };
-            var passwd = jQuery(".drpCreateSubscriptionForm #password").val();
-            var passwdhash = new jsSHA(passwd, "ASCII").getHash("SHA-512", "HEX");
-            jQuery(".drpCreateSubscriptionForm #password").val("secured: "+passwdhash);
-            var user = {
-                loginName: jQuery(".drpCreateSubscriptionForm #loginName").val(),
-                screenName: jQuery(".drpCreateSubscriptionForm #userName").val(),
-                password: passwdhash,
-                mail: jQuery(".drpCreateSubscriptionForm #mail").val(),
-                invite: jQuery(".drpCreateSubscriptionForm #token").val()
-            }
-            var locComm = drp.tr.comm.submitLocation(location);
-            drp.postTR(
-                {
-                    id:"submitLocation",
-                    comm:[locComm]
-                }, 
-                function(rsp){
-                    user.ownLocation = [rsp.submitLocation.result];
-                    var userComm = drp.tr.comm.submitUser(user);
+            jQuery(".drpCreateSubscriptionForm #token").val(token);
+            // Initialize Google Map
+            map = new google.maps.Map(jQuery( '#drpMapCanvas' )[0], myOptions);
+            map.mapTypes.set('expodium2', expodiumMapType2);    
+            jQuery(".drpCreateSubscriptionForm #submitSubscription").click(function(e){
+                if(jQuery(".drpCreateSubscriptionForm #locMa").val() == "" || jQuery(".drpCreateSubscriptionForm #locNa").val() == ""){
+                    //alert("you need to pick a location for your residence to create an account");
+
+                    jQuery(".errorText").empty();
+                    jQuery(".errorText").hide();
+                    jQuery(".errorText").append('You need to pick a location for your residence to create an account');
+                    jQuery(".errorText").fadeIn();
+
+                }
+                if(jQuery(".drpCreateSubscriptionForm #loginName").val() == "" || jQuery(".drpCreateSubscriptionForm #mail").val() == "" || jQuery(".drpCreateSubscriptionForm #userName").val() == "" || jQuery(".drpCreateSubscriptionForm #password").val() == ""){
+                    //alert("complete all fields fool");
+                    jQuery(".errorText2").empty();
+                    jQuery(".errorText2").hide();
+                    jQuery(".errorText2").append('You need to complete all fields');
+                    jQuery(".errorText2").fadeIn();
+                }else{
+                    jQuery(".errorText").hide();
+                    jQuery(".errorText2").hide();
+                    var location = {
+                        Ma: jQuery(".drpCreateSubscriptionForm #locMa").val(),
+                        Na: jQuery(".drpCreateSubscriptionForm #locNa").val()
+                    };
+                    var passwd = jQuery(".drpCreateSubscriptionForm #password").val();
+                    var passwdhash = new jsSHA(passwd, "ASCII").getHash("SHA-512", "HEX");
+                    jQuery(".drpCreateSubscriptionForm #password").val("secured: "+passwdhash);
+                    var user = {
+                        loginName: jQuery(".drpCreateSubscriptionForm #loginName").val(),
+                        screenName: jQuery(".drpCreateSubscriptionForm #userName").val(),
+                        password: passwdhash,
+                        mail: jQuery(".drpCreateSubscriptionForm #mail").val(),
+                        invite: jQuery(".drpCreateSubscriptionForm #token").val()
+                    }
+                    var locComm = drp.tr.comm.submitLocation(location);
                     drp.postTR(
                         {
-                            id:"submitUser",
-                            comm:[userComm]
+                            id:"submitLocation",
+                            comm:[locComm]
                         }, 
                         function(rsp){
-                            if(rsp.submitUser.result){
-                                jQuery(dl).dialog('close');
-                                vdvw.m.Session.setUid(rsp.submitUser.result);
-                                drp.test.registerSuccessDialog(rsp.submitUser.result);
-                                jQuery("#login-link").hide();
-                                jQuery("#now-what").hide();
-                                jQuery("#logout-link").show();
-                                jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:user.screenName}));
-                                jQuery("#login-name").show();
-                            }
+                            user.ownLocation = [rsp.submitLocation.result];
+                            var userComm = drp.tr.comm.submitUser(user);
+                            drp.postTR(
+                                {
+                                    id:"submitUser",
+                                    comm:[userComm]
+                                }, 
+                                function(rsp){
+                                    if(rsp.submitUser.result){
+                                        jQuery(dl).dialog('close');
+                                        vdvw.m.Session.setUid(rsp.submitUser.result);
+                                        drp.test.registerSuccessDialog(rsp.submitUser.result);
+                                        jQuery("#login-link").hide();
+                                        jQuery("#now-what").hide();
+                                        jQuery("#logout-link").show();
+                                        jQuery("#login-name").html(jQuery("#loginNameTPL").render({name:user.screenName}));
+                                        jQuery("#login-name").show();
+                                    }
+                                }
+                            );
                         }
                     );
                 }
-            );
+            });
         }
-    });
+    );
 };
 drp.test.registerSuccessDialog = function(id){
     var dl = drp.createDialog(jQuery('#drpRegisterSuccessDialogDialogTPL').render({}));
