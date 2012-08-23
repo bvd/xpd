@@ -348,10 +348,12 @@ drp.test.tagsDialog = function(){
         alert("no table for " + xpd.Tag.EntityName() + " in database.")
     }
     var tagTab = xpd.db.table(xpd.Tag.EntityName());
-    var tags = (tagTab) ? tagTab.records : [];
-    $H(tags).each(function(v){
-        tab.append(jQuery('#drpTagTableRowTPL').render(v.value));
-    });
+    if(tagTab){
+        var tags = tagTab.records;
+        $H(tags).each(function(v){
+            tab.append(jQuery('#drpTagTableRowTPL').render(v.value));
+        });
+    }
     tab.find("input[type=button]").click(function(event){
         jQuery(dl).dialog('close');
         vdvw.c.onClick.call(event.target,event);
