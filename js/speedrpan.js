@@ -347,7 +347,8 @@ drp.test.tagsDialog = function(){
     if(!xpd.db.table(xpd.Tag.EntityName())){
         alert("no table for " + xpd.Tag.EntityName() + " in database.")
     }
-    var tags = xpd.db.table(xpd.Tag.EntityName()).records;
+    var tagTab = xpd.db.table(xpd.Tag.EntityName());
+    var tags = (tagTab) ? tagTab.records : [];
     $H(tags).each(function(v){
         tab.append(jQuery('#drpTagTableRowTPL').render(v.value));
     });
