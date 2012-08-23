@@ -2609,7 +2609,7 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     var mappedComment = xpd.Mappers.getMappedCommentForComment(xpd.db.table(xpd.Comment.EntityName()).select(commentId));
     var review = xpd.Mappers.getReviewForId(mappedComment.commentedEntityId);
     var mappedReview = xpd.Mappers.getMappedReviewForReview(review);
-    var commentMarker = vdvw.c.VisualizeComment(mappedComment, true);
+    var commentMarker = vdvw.c.VisualizeComment(mappedComment, true, true);
     var commentedReviewMarker = vdvw.c.VisualizeReview(mappedReview,true,true);
     xpd.viz.drawLine('#888', commentMarker.getPosition(), commentedReviewMarker.getPosition(), false, 1);
     var factoredReview = xpd.viz.contentpane.factorForReview(mappedReview);
