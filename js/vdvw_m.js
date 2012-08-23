@@ -688,7 +688,10 @@ xpd.Mappers.convertToHumanReadableLocalTimeString = function(timestamp){
         timestamp = parseInt(timestamp);
     }
     var dt = new Date(timestamp * 1000);
-    var str = dt.getDate() + '-' + (dt.getMonth()+1) + '-' + dt.getFullYear() + ' ' + dt.getHours() + ':' + dt.getMinutes();
+    var str = dt.getDate() + '/' + (dt.getMonth()+1) + '/' + dt.getFullYear() + ' ' + dt.getHours() + ':';
+    var minutes = dt.getMinutes();
+    if(minutes < 10) str += "0" + minutes;
+    else str += minutes;
     return str;
 }
 xpd.Mappers.getLocationForUserId = function(userId){
