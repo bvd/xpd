@@ -2486,7 +2486,7 @@ vdvw.c.VisualizeActionsForUserId = function(userId){
         vdvw.c.VisualizeReview(review,false,true);
     });
     comments.each(function(comment){
-        vdvw.c.VisualizeComment(comment);
+        vdvw.c.VisualizeComment(comment,false,true);
     });
 }
 vdvw.c.VisualizeComment = function(mappedComment,visualizeCommenter,drawCommentToCommenterLine){
