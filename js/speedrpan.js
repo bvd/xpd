@@ -506,19 +506,19 @@ drp.test.nowReallyPoseQuestionDialog = function(question, questionId, errorText)
                 if(errorMessage == "0-no result: book not found for code"){
                     dialogText = "The code you entered does not seem to be valid, please try again";
                     jQuery(".drpPoseQuestionForm #bookUnique").val("");
-                    jQuery(".drpPoseQuestionForm #answer").css("border","1px solid red");
+                    jQuery(".drpPoseQuestionForm #bookUnique").css("border","1px solid red");
                 }
                 if(errorMessage == "0-mail address exists"){
                     dialogText = "That email address is taken";
                     jQuery(".drpPoseQuestionForm #userMail").val("");
-                    jQuery(".drpPoseQuestionForm #answer").css("border","1px solid red");
+                    jQuery(".drpPoseQuestionForm #userMail").css("border","1px solid red");
                 }
                 if(dialogText == ""){
                     alert(errorMessageText);
                 }else{
                     jQuery(".errorText").empty();
                     jQuery(".errorText").hide();
-                    jQuery(".errorText").append(errorText);
+                    jQuery(".errorText").append(dialogText);
                     jQuery(".errorText").fadeIn();
                     //
                     //
