@@ -190,7 +190,7 @@ body {margin-top:0;}
             <div id="cms-itemsList" style="height: 500px; overflow:auto; clear:both">
                 <p>click a type to show items</p>
             </div>
-            <div id="cms-fieldsList" style="height: 400px; display: none; overflow:auto;">
+            <div id="cms-fieldsList" style="height: 400px; display: none; overflow:auto; clear:both">
                 <p>items list (empty)</p>
             </div>
             <div id="cms-commands" style="display: none">
