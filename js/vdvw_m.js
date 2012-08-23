@@ -2453,11 +2453,11 @@ vdvw.c.ShowBookLocationsExcept = function(exceptId){
 vdvw.c.VisualizeConnections = function(type,id){
     vdvw.c.closeFaqAndAbout();
     xpd.flush.clearMap();
-    if(type == xpd.BookPrint.EntityName()){
+    /*if(type == xpd.BookPrint.EntityName()){
         var currentBookstop = xpd.Mappers.getBookAtCurrentLocationForId(id)[0];
         vdvw.c.VisualizeTraceForBook(id, currentBookstop.ownerId);
-    }
-    else if(type == xpd.Comment.EntityName()){
+    }// TODO visualize books
+    else */if(type == xpd.Comment.EntityName()){
         vdvw.c.VisualizeConnectionsForCommentId(id);
     }
     else if(type == xpd.Review.EntityName()){
@@ -2473,6 +2473,7 @@ vdvw.c.VisualizeConnections = function(type,id){
     }
     else if(type == xpd.Tag.EntityName()){
         vdvw.c.VisualizeItemsForTagId(id);
+        vdvw.c.ShowBookLocations();
     }
     else{
         alert("cannot display type: " + type);
@@ -2600,6 +2601,8 @@ vdvw.c.VisualizeConnectionsForReviewId = function(reviewId){
     reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
     reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
     xpd.viz.contentpane.selectComment(null, review.id);
+    var bookstop = xpd.Mappers.getBookStopForUserId(review.ownerId);
+    vdvw.c.ShowBookLocationsExcept(bookstop.id);
 }
 vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     xpd.flush.clearMap();
@@ -2617,6 +2620,8 @@ vdvw.c.VisualizeConnectionsForCommentId = function (commentId) {
     reviewWithAddedComments.find(".fcf-click").click(vdvw.c.onClick);
     reviewWithAddedComments.find(".fcf-click").css('cursor','pointer');
     xpd.viz.contentpane.selectComment(mappedComment.id, mappedReview.id);
+    var bookstop = xpd.Mappers.getBookStopForUserId(mappedComment.ownerId);
+    vdvw.c.ShowBookLocationsExcept(bookstop.id);
 }
 vdvw.c.drawTeaserForIcon = function(ownerName, Ma, Na, targetMarker, bookId, isCurrentOwner){
     var defaultLocationString = "location: " + Ma + "," + Na;
