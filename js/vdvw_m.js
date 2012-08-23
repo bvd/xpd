@@ -734,8 +734,9 @@ xpd.Mappers.getMappedTagsForReviewId = function(reviewId){
     var q = vdvw.m.DataBase.createQuery('where from is '+reviewId);
     var assocTabName = xpd.Review.EntityName() + '_' + xpd.Relations.has() + '_' + xpd.Tag.EntityName();
     var assocTab = xpd.db.table(assocTabName);
-    var records = assocTab.select(q);
     var ret = [];
+    if(!(assocTab)) return ret;
+    var records = assocTab.select(q);
     records.each(function(v,k){
         ret.push(xpd.db.table(xpd.Tag.EntityName()).select(v.to));
     });
@@ -745,8 +746,9 @@ xpd.Mappers.getMappedTagsForCommentId = function(commentId){
     var q = vdvw.m.DataBase.createQuery('where from is '+commentId);
     var assocTabName = xpd.Comment.EntityName() + '_' + xpd.Relations.has() + '_' + xpd.Tag.EntityName();
     var assocTab = xpd.db.table(assocTabName);
-    var records = assocTab.select(q);
     var ret = [];
+    if(!(assocTab)) return ret;
+    var records = assocTab.select(q);
     records.each(function(v,k){
         ret.push(xpd.db.table(xpd.Tag.EntityName()).select(v.to));
     });
