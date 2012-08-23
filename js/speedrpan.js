@@ -544,6 +544,7 @@ drp.test.createSubscriptionDialog = function(token){
             jQuery(dl).dialog('close');
             jQuery("#logout-link").hide();
             jQuery("#login-link").show();
+            jQuery("#now-what").show();
             jQuery("#login-name").hide();
             jQuery("#cms-link").hide();
             
