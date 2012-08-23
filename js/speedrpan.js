@@ -500,18 +500,31 @@ drp.test.nowReallyPoseQuestionDialog = function(question, questionId, errorText)
                 var dialogText = "";
                 if(errorMessage == "0-answer incorrect"){
                     dialogText = "I'm afraid that is not the correct answer, please try again";
+                    jQuery(".drpPoseQuestionForm #answer").val("");
+                    jQuery(".drpPoseQuestionForm #answer").css("border","1px solid red");
                 }
                 if(errorMessage == "0-no result: book not found for code"){
                     dialogText = "The code you entered does not seem to be valid, please try again";
+                    jQuery(".drpPoseQuestionForm #bookUnique").val("");
+                    jQuery(".drpPoseQuestionForm #answer").css("border","1px solid red");
                 }
                 if(errorMessage == "0-mail address exists"){
                     dialogText = "That email address is taken";
+                    jQuery(".drpPoseQuestionForm #userMail").val("");
+                    jQuery(".drpPoseQuestionForm #answer").css("border","1px solid red");
                 }
                 if(dialogText == ""){
                     alert(errorMessageText);
                 }else{
-                    jQuery(dl).dialog('close');
-                    drp.test.poseQuestionDialog(question, questionId, dialogText);
+                    jQuery(".errorText").empty();
+                    jQuery(".errorText").hide();
+                    jQuery(".errorText").append(errorText);
+                    jQuery(".errorText").fadeIn();
+                    //
+                    //
+                    //
+                    //jQuery(dl).dialog('close');
+                    //drp.test.poseQuestionDialog(question, questionId, dialogText);
                 }
             }
         );
