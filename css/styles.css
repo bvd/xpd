@@ -316,6 +316,7 @@ span.reviewHead {
     font-size: 18px;
     font-weight: bolder;
     background: #c73c46;
+    color: white;
     width: 100%;
 }
 span.reviewOwnerName {
@@ -337,6 +338,7 @@ span.commentHead {
     font-weight: bolder;
     background: #333;
     width: 100%;
+    color: white;
 }
 span.commentedHead {
     font-size: 11px;
@@ -352,6 +354,7 @@ span.commentOwnerName {
     padding-top: 15px;
     padding-bottom: 15px;
     margin-right: 10px;
+    
 }
 .teaser.head {
     font-size: 14px;
@@ -425,7 +428,7 @@ span.commentOwnerName {
     width: 300px;
 }
 #contentpane p{
-    padding: 5px;
+    /*padding: 5px;*/
 }
 #contentpane-toggle {
     background: #333;
@@ -442,13 +445,23 @@ span.commentOwnerName {
     padding: 5px 10px 5px 5px;
 }
 #contentpane .commentExp {
-    border-bottom: 1px dashed #fff;
-    padding: 5px 10px 5px 5px;
+    border-top: 1px dashed #666;
+    padding: 15px 10px 5px 20px;
+    width: 275px;
+    background: rgba(0, 0, 0, 0.4);
+    margin-left: -10px;
     font-size: 11px;
+}
+.commentExp iframe {
+	margin-left: -20px;
 }
 #contentpane .reviewBody img, #contentpane .commentBody img {
     width: 280px;
     margin-left: -5px;
+}
+.selected-review {
+	background: white;
+	color: #333;
 }
 .commentExp p, .reviewExp p {
     font-size: 11px;
@@ -460,6 +473,10 @@ span.commentOwnerName {
     background: #ccc;
     position: absolute;
     margin-left: -100px;
+}
+.commentsContainer {
+	margin: 0;
+	padding: 0;
 }
 .add-comment-button {
     padding: 0 5px 0 5px;
@@ -482,6 +499,7 @@ span.commentOwnerName {
 	background: #333;
 	font-size: 11px;
 	margin-right: 5px;
+	color: white;
 }
 .vdvw-delete-button {
     padding: 0 5px 0 5px;

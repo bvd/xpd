@@ -2740,7 +2740,13 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
             JQ_selectedReview = JQ_reviewDiv;
             if(null == commentIdNullable){
                 //todo change review background
-                JQ_selectedReview.css('background', '#888');
+                JQ_selectedReview.css
+                 ({
+                 'background-color' : 'rgba(255, 255, 255, 0.2)'
+                 });
+                //JQ_selectedReview.css('border-left', '4px solid white');
+                //JQ_selectedReview.addClass('selected-review');
+                //JQ_selectedReview.prepend()
             }
             heightCount -= JQ_reviewDiv.outerHeight();
             break;
@@ -2756,7 +2762,10 @@ xpd.viz.contentpane.selectComment = function(commentIdNullable, reviewId){
             if(vdvw.c.identify(JQ_commentDiv.attr("id")).id == commentIdNullable){
                     JQ_selectedComment = JQ_commentDiv;
                     //todo change comment background
-                    JQ_commentDiv.css('background', '#888');
+                    JQ_commentDiv.css
+                    ({
+                    'background-color' : 'rgba(255, 255, 255, 0.2)'
+                    });
                     break;
             }else{
                     heightCount += JQ_commentDiv.outerHeight();
@@ -2775,7 +2784,7 @@ xpd.viz.icon.factorForUser = function (Ma, Na, userName, userId) {
         position: new google.maps.LatLng( Ma, Na ),
         icon: vdvw.v.Const.stopIcon(),
         labelContent: userName,
-        labelAnchor: new google.maps.Point(-2, 35),
+        labelAnchor: new google.maps.Point(-1, 34),
         labelClass: "marker-label user",
         title: vdvw.v.Const.bookTitle(userId, userName)
     });
@@ -2793,7 +2802,7 @@ xpd.viz.icon.factorForReview = function (review) {
         position: new google.maps.LatLng( review.Ma, review.Na ),
         icon: vdvw.v.Const.reviewIcon(),
         labelContent: excerpt,
-        labelAnchor: new google.maps.Point(-11, 36),
+        labelAnchor: new google.maps.Point(-11, 35),
         labelClass: "marker-label reviewer",
         title: 'review: "' + review.head + '"'
     });
@@ -2813,7 +2822,7 @@ xpd.viz.icon.factorForComment = function (comment) {
     return new MarkerWithLabel({
         position: new google.maps.LatLng( comment.Ma, comment.Na ),
         icon: vdvw.v.Const.commentIcon(),
-        labelAnchor: new google.maps.Point(-5, 34),
+        labelAnchor: new google.maps.Point(-5, 32),
         labelContent: excerpt,
         labelClass: "marker-label comment",
         title: comment.ownerName + ' commented on the item: "' + comment.commentedEntityHead + '"'
