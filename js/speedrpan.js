@@ -1085,7 +1085,7 @@ drp.test.geocodeAddress = function(address, string) {
                 if (results && results.length > 0) {
                     //updateMarkerAddress(results[0].formatted_address);
                     map.setCenter(results[0].geometry.location);
-                    map.setZoom(12);
+                    //map.setZoom(12);
                     marker.setPosition(results[0].geometry.location);
                 
                     google.maps.event.addListener(marker, 'dragend', function() {
@@ -1117,9 +1117,9 @@ drp.test.geocodeAddress = function(address, string) {
             if (status == google.maps.GeocoderStatus.OK) {
                 if (results && results.length > 0) {
                 
-                    if(map.getZoom() < 12){
+                    /*if(map.getZoom() < 12){
                         map.setZoom(12);
-                    }
+                    }*/
                     google.maps.event.addListener(marker, 'dragend', function() {
                         drp.test.geocodeAddress(marker.getPosition(), false);
                     });

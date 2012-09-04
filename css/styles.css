@@ -180,6 +180,9 @@ html { height: 100%; background: #fff; }
 	cursor: pointer;
 	z-index: 3;
 }
+#tags-link {
+	border-right: 1px solid white;
+}
 #logout-link, #cms-link {
         display:none;
 }
@@ -470,6 +473,15 @@ span.commentOwnerName {
     color: #333;
     background: #fff;
     cursor: pointer;
+}
+.tagsContainer {
+	padding-bottom: 5px;
+}
+.xpd-tag {
+	padding: 5px;
+	background: #333;
+	font-size: 11px;
+	margin-right: 5px;
 }
 .vdvw-delete-button {
     padding: 0 5px 0 5px;
