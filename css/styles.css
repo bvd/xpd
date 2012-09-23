@@ -583,3 +583,19 @@ button:active, input[type="button"]:active{
     padding: 10px;
     border-radius: 4px;
 }
+#tabs.ui-widget-content, #tabsWrap.ui-widget-content{
+	font-size: 0.9em;
+	border: none;
+	background: #60768C;
+	color: white;
+	-moz-box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+	box-shadow: none !important;
+}
+/* RESPONSIVE CSS FOR MOBILE DEVICES */
+
+@media (max-width: 650px) {
+	#breadcrumb-wrapper, #legend-pic {
+		display: none;
+	}
+}
